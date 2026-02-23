@@ -13,12 +13,10 @@
                         </div>
                     @endforeach
                 </div>
-                <div class="absolute inset-0 bg-gradient-to-t from-white/25 via-white/10 to-transparent"></div>
-                <!-- <div class="absolute left-0 top-0 z-20 p-5 sm:p-8 lg:p-10">
-                    <span class="inline-flex items-center rounded-full border border-white bg-slate-600/80 px-4 py-2 text-white shadow-sm">
-                        <span class="catalog-hero-chip-title text-lg font-semibold sm:text-xl">Katalog Produk</span>
-                    </span>
-                </div> -->
+                <div class="absolute inset-0 bg-gradient-to-t from-black/45 via-black/20 to-transparent"></div>
+                <div class="absolute left-0 top-0 z-20 px-5 pt-2 sm:px-8 sm:pt-3 lg:px-10 lg:pt-4">
+                    <h1 class="catalog-hero-title whitespace-nowrap text-[2.05rem] font-bold text-white sm:text-[3.556rem]">Katalog Produk</h1>
+                </div>
                 <div class="swiper-pagination !bottom-3 z-30"></div>
             </div>
         </section>
@@ -64,25 +62,55 @@
 @push('scripts')
     <script>
         (() => {
-            const root = document.querySelector('.hero-swiper');
-            if (!root || typeof window.Swiper === 'undefined') return;
+            const initHeroSwiper = () => {
+                const root = document.querySelector('.hero-swiper');
+                if (!root || root.dataset.swiperReady === '1') return true;
+                if (typeof window.Swiper === 'undefined' || !window.SwiperModules) return false;
 
-            new window.Swiper('.hero-swiper', {
-                loop: true,
-                speed: 900,
-                autoplay: {
-                    delay: 3500,
-                    disableOnInteraction: false,
-                },
-                pagination: {
-                    el: '.swiper-pagination',
-                    clickable: true,
-                },
-                effect: 'fade',
-                fadeEffect: {
-                    crossFade: true,
-                },
-            });
+                const { Autoplay, EffectFade, Pagination } = window.SwiperModules;
+
+                new window.Swiper('.hero-swiper', {
+                    modules: [Autoplay, Pagination, EffectFade],
+                    loop: true,
+                    speed: 950,
+                    autoplay: {
+                        delay: 5200,
+                        disableOnInteraction: false,
+                        pauseOnMouseEnter: true,
+                    },
+                    pagination: {
+                        el: '.swiper-pagination',
+                        clickable: true,
+                    },
+                    effect: 'fade',
+                    fadeEffect: {
+                        crossFade: true,
+                    },
+                });
+
+                root.dataset.swiperReady = '1';
+                return true;
+            };
+
+            const boot = () => {
+                if (initHeroSwiper()) return;
+
+                let attempts = 0;
+                const timer = setInterval(() => {
+                    attempts += 1;
+                    if (initHeroSwiper() || attempts >= 80) {
+                        clearInterval(timer);
+                    }
+                }, 50);
+            };
+
+            if (document.readyState === 'loading') {
+                document.addEventListener('DOMContentLoaded', boot, { once: true });
+            } else {
+                boot();
+            }
+
+            window.addEventListener('swiper:ready', boot, { once: true });
         })();
     </script>
 @endpush

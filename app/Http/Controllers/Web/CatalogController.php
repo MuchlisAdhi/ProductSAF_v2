@@ -159,6 +159,14 @@ class CatalogController extends Controller
             ->with(['category', 'image', 'nutritions'])
             ->findOrFail($id);
 
+        $relatedProducts = Product::query()
+            ->with(['image', 'category'])
+            ->where('category_id', $product->category_id)
+            ->where('id', '!=', $product->id)
+            ->orderBy('name')
+            ->limit(6)
+            ->get();
+
         $returnTo = trim((string) $request->query('returnTo', ''));
         $safeReturnTo = str_starts_with($returnTo, '/') && ! str_starts_with($returnTo, '//')
             ? $returnTo
@@ -166,6 +174,7 @@ class CatalogController extends Controller
 
         return view('catalog.product-detail', [
             'product' => $product,
+            'relatedProducts' => $relatedProducts,
             'backHref' => $safeReturnTo ?: "/categories/{$product->category_id}",
             'backLabel' => $safeReturnTo !== '' ? 'Back to List' : 'Kembali',
         ]);

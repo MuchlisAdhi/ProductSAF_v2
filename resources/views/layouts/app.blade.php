@@ -6,7 +6,6 @@
     <title>{{ $title ?? 'Sidoagung Farm Product Catalog' }}</title>
     <link rel="icon" href="{{ asset('images/logo/saf-logo-merah.ico') }}" type="image/x-icon">
     <link rel="shortcut icon" href="{{ asset('images/logo/saf-logo-merah.ico') }}" type="image/x-icon">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css">
     @stack('head')
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
@@ -26,7 +25,7 @@
                 >
                 <div class="min-w-0 leading-tight">
                     <div class="text-sm font-semibold text-white sm:text-base">Sidoagung Farm</div>
-                    <div class="text-[11px] text-white/80 sm:text-xs">Product Catalog</div>
+                    <div class="text-[11px] text-white/80 sm:text-xs">Menjadi tuan rumah di negeri sendiri</div>
                 </div>
             </a>
 
@@ -55,7 +54,6 @@
             &copy; {{ now()->year }} Sidoagung Farm - Product Catalog
         </div>
     </footer>
-    <script src="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/preline@2.5.0/dist/preline.min.js"></script>
     @stack('scripts')
 </body>

@@ -102,16 +102,33 @@
 
             <div class="p-4 sm:p-5">
                 @if($products->count() === 0)
-                    <div class="rounded-xl border border-dashed border-slate-300 bg-slate-50 p-4 text-sm text-slate-600">
-                        No products found for current filters.
+                    <div class="rounded-2xl border border-dashed border-slate-300 bg-slate-50 px-5 py-8 text-center sm:px-6">
+                        <span class="mx-auto grid h-12 w-12 place-items-center rounded-xl bg-white text-slate-500 ring-1 ring-slate-200">
+                            <x-lucide-search-x class="h-6 w-6" />
+                        </span>
+                        <h3 class="mt-3 text-base font-semibold text-slate-900">Produk tidak ditemukan</h3>
+                        <p class="mx-auto mt-1 max-w-lg text-sm text-slate-600">
+                            Coba ubah filter pencarian, kategori, atau warna karung. Kamu juga bisa reset filter untuk melihat semua produk lagi.
+                        </p>
+                        <a href="{{ $basePath }}" class="mt-4 inline-flex items-center rounded-lg bg-emerald-700 px-4 py-2 text-sm font-semibold text-white transition hover:bg-emerald-600">
+                            Reset Filter
+                        </a>
                     </div>
                 @else
                     <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
                         @foreach($products as $product)
-                            <a href="{{ route('products.show', $product->id) }}?returnTo={{ urlencode(request()->fullUrl()) }}" class="catalog-card group rounded-2xl border border-slate-200 bg-white p-4 transition hover:-translate-y-0.5 hover:border-emerald-300 hover:shadow-md">
+                            <a href="{{ route('products.show', $product->id) }}?returnTo={{ urlencode(request()->fullUrl()) }}" class="js-product-card catalog-card group relative rounded-2xl border border-slate-200 bg-white p-4 transition hover:-translate-y-0.5 hover:border-emerald-300 hover:shadow-md">
                                 <div class="flex items-start gap-3">
-                                    <div class="h-24 w-20 shrink-0 overflow-hidden rounded-lg border border-slate-200 bg-slate-50">
-                                        <img src="{{ $product->image?->system_path ?? 'https://placehold.co/120x180/e2e8f0/334155?text=No+Image' }}" alt="{{ $product->code }}" class="h-full w-full object-cover">
+                                    <div class="relative h-24 w-20 shrink-0 overflow-hidden rounded-lg border border-slate-200 bg-slate-50">
+                                        <div class="catalog-skeleton absolute inset-0"></div>
+                                        <img
+                                            src="{{ $product->image?->system_path ?? 'https://placehold.co/120x180/e2e8f0/334155?text=No+Image' }}"
+                                            alt="{{ $product->code }}"
+                                            class="h-full w-full object-cover catalog-lazy-image transition-opacity duration-300"
+                                            data-lazy-image
+                                            loading="lazy"
+                                            decoding="async"
+                                        >
                                     </div>
                                     <div class="min-w-0 flex-1">
                                         <p class="text-sm font-semibold tracking-wide text-emerald-700">{{ $product->code }}</p>
@@ -142,3 +159,36 @@
         </div>
     </section>
 @endsection
+
+@push('scripts')
+    <script>
+        (() => {
+            const skeletonFallbackMs = 3400;
+            const initCardSkeletons = () => {
+                document.querySelectorAll('.js-product-card').forEach((card) => {
+                    const image = card.querySelector('[data-lazy-image]');
+                    if (!image) {
+                        card.classList.add('is-loaded');
+                        return;
+                    }
+
+                    const markLoaded = () => {
+                        image.classList.add('is-loaded');
+                        card.classList.add('is-loaded');
+                    };
+
+                    if (image.complete && image.naturalWidth > 0) {
+                        requestAnimationFrame(markLoaded);
+                    } else {
+                        image.addEventListener('load', markLoaded, { once: true });
+                        image.addEventListener('error', markLoaded, { once: true });
+                    }
+
+                    setTimeout(() => card.classList.add('is-loaded'), skeletonFallbackMs);
+                });
+            };
+
+            initCardSkeletons();
+        })();
+    </script>
+@endpush
