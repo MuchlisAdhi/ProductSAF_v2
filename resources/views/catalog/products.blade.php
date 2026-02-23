@@ -55,7 +55,14 @@
                     <select name="sackColor" class="min-h-[44px] w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm focus:border-emerald-500/40 focus:outline-none focus:ring-2 focus:ring-amber-200/80">
                         <option value="">All Colors</option>
                         @foreach($sackColors as $color)
-                            <option value="{{ $color }}" @selected($sackColorFilter === $color)>{{ $color }}</option>
+                            @php
+                                $colorLabel = match (\Illuminate\Support\Str::lower((string) $color)) {
+                                    'orange', 'oranye' => 'Oranye',
+                                    'pink', 'merah muda' => 'Merah Muda',
+                                    default => $color,
+                                };
+                            @endphp
+                            <option value="{{ $color }}" @selected($sackColorFilter === $color)>{{ $colorLabel }}</option>
                         @endforeach
                     </select>
                 </div>

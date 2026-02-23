@@ -7,6 +7,11 @@
 @php
     $value = trim((string) $color);
     $normalized = \Illuminate\Support\Str::lower($value);
+    $displayValue = match ($normalized) {
+        'orange', 'oranye' => 'Oranye',
+        'pink', 'merah muda' => 'Merah Muda',
+        default => $value,
+    };
 
     $tone = 'slate';
     if (in_array($normalized, ['merah', 'red'], true)) {
@@ -17,7 +22,7 @@
         $tone = 'emerald';
     } elseif (in_array($normalized, ['orange', 'oranye'], true)) {
         $tone = 'orange';
-    } elseif ($normalized === 'pink') {
+    } elseif (in_array($normalized, ['pink', 'merah muda'], true)) {
         $tone = 'pink';
     }
 
@@ -52,5 +57,5 @@
     {{ $attributes->class("inline-flex rounded-full px-2.5 py-1 text-[11px] font-semibold {$ringClass} {$badgeClass} {$resolvedClass}") }}
     @if($outlineStyle !== '') style="{{ $outlineStyle }}" @endif
 >
-    {{ $value !== '' ? $value : '-' }}
+    {{ $displayValue !== '' ? $displayValue : '-' }}
 </span>

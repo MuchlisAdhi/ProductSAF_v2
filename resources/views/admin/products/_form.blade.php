@@ -1,5 +1,9 @@
 @php
-    $selectedSackColor = old('sack_color', $product->sack_color ?? '');
+    $selectedSackColor = match (\Illuminate\Support\Str::lower((string) old('sack_color', $product->sack_color ?? ''))) {
+        'orange', 'oranye' => 'Oranye',
+        'pink', 'merah muda' => 'Merah Muda',
+        default => old('sack_color', $product->sack_color ?? ''),
+    };
     $selectedCategoryId = old('category_id', $product->category_id ?? ($categories->first()->id ?? ''));
     $fieldClass = 'w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm placeholder:text-slate-400 focus:border-emerald-500/40 focus:outline-none focus:ring-2 focus:ring-amber-200/80';
     $initialImagePath = (string) ($product?->image?->system_path ?? '');
@@ -26,7 +30,7 @@
                 <input name="code" value="{{ old('code', $product->code ?? '') }}" class="{{ $fieldClass }}" placeholder="SA 571 NS" required>
             </div>
             <div>
-                <label class="mb-1 block text-xs font-semibold text-slate-700">Name</label>
+                <label class="mb-1 block text-xs font-semibold text-slate-700">Feed Form</label>
                 <input name="name" value="{{ old('name', $product->name ?? '') }}" class="{{ $fieldClass }}" placeholder="Pakan Starter Broiler" required>
             </div>
             <div class="sm:col-span-2">

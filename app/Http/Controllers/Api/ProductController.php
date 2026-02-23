@@ -55,7 +55,7 @@ class ProductController extends Controller
                     'code' => (string) $request->string('code'),
                     'name' => (string) $request->string('name'),
                     'description' => (string) $request->string('description'),
-                    'sack_color' => (string) $request->string('sackColor'),
+                    'sack_color' => $this->normalizeSackColor((string) $request->string('sackColor')),
                     'category_id' => (string) $request->string('categoryId'),
                     'image_id' => $imageId !== '' ? $imageId : null,
                 ]);
@@ -72,10 +72,6 @@ class ProductController extends Controller
                 return $product->fresh(['category', 'nutritions', 'image']);
             });
         } catch (QueryException $exception) {
-            if ((string) $exception->getCode() === '23000') {
-                return response()->json(['error' => 'Product code must be unique'], 409);
-            }
-
             report($exception);
 
             return response()->json(['error' => 'Internal server error'], 500);
@@ -135,7 +131,7 @@ class ProductController extends Controller
                     'code' => (string) $request->string('code'),
                     'name' => (string) $request->string('name'),
                     'description' => (string) $request->string('description'),
-                    'sack_color' => (string) $request->string('sackColor'),
+                    'sack_color' => $this->normalizeSackColor((string) $request->string('sackColor')),
                     'category_id' => (string) $request->string('categoryId'),
                     'image_id' => $imageId !== '' ? $imageId : null,
                 ]);
@@ -152,10 +148,6 @@ class ProductController extends Controller
                 return $product->fresh(['category', 'nutritions', 'image']);
             });
         } catch (QueryException $exception) {
-            if ((string) $exception->getCode() === '23000') {
-                return response()->json(['error' => 'Product code must be unique'], 409);
-            }
-
             report($exception);
 
             return response()->json(['error' => 'Internal server error'], 500);
@@ -270,5 +262,17 @@ class ProductController extends Controller
                 'value' => $nutrition->value,
             ])->values(),
         ];
+    }
+
+    /**
+     * Normalize legacy sack color labels.
+     */
+    private function normalizeSackColor(string $value): string
+    {
+        return match (strtolower(trim($value))) {
+            'orange', 'oranye' => 'Oranye',
+            'pink', 'merah muda' => 'Merah Muda',
+            default => trim($value),
+        };
     }
 }

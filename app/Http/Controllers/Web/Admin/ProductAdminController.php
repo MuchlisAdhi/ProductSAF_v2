@@ -22,7 +22,7 @@ class ProductAdminController extends Controller
      *
      * @var list<string>
      */
-    private array $sackColors = ['Merah', 'Biru', 'Hijau', 'Orange', 'Pink'];
+    private array $sackColors = ['Merah', 'Biru', 'Hijau', 'Oranye', 'Merah Muda'];
 
     /**
      * Product list.
@@ -93,6 +93,7 @@ class ProductAdminController extends Controller
     public function store(Request $request): RedirectResponse
     {
         $payload = $this->validatePayload($request);
+        $payload['sack_color'] = $this->normalizeSackColor((string) ($payload['sack_color'] ?? ''));
 
         DB::transaction(function () use ($request, $payload): void {
             if ($request->hasFile('image')) {
@@ -129,6 +130,7 @@ class ProductAdminController extends Controller
     {
         $product = Product::query()->findOrFail($id);
         $payload = $this->validatePayload($request, $product->id);
+        $payload['sack_color'] = $this->normalizeSackColor((string) ($payload['sack_color'] ?? ''));
 
         DB::transaction(function () use ($request, $payload, $product): void {
             if ($request->boolean('remove_image')) {
@@ -182,7 +184,7 @@ class ProductAdminController extends Controller
     private function validatePayload(Request $request, ?string $id = null): array
     {
         return $request->validate([
-            'code' => ['required', 'string', Rule::unique('products', 'code')->ignore($id)],
+            'code' => ['required', 'string'],
             'name' => ['required', 'string', 'min:2'],
             'description' => ['required', 'string', 'min:4'],
             'sack_color' => ['required', 'string', 'min:2'],
@@ -268,5 +270,17 @@ class ProductAdminController extends Controller
     private function resolvePageSize(int $requested, array $allowed, int $default): int
     {
         return in_array($requested, $allowed, true) ? $requested : $default;
+    }
+
+    /**
+     * Normalize legacy sack color labels.
+     */
+    private function normalizeSackColor(string $value): string
+    {
+        return match (Str::lower(trim($value))) {
+            'orange', 'oranye' => 'Oranye',
+            'pink', 'merah muda' => 'Merah Muda',
+            default => trim($value),
+        };
     }
 }
