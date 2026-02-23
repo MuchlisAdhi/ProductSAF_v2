@@ -33,6 +33,7 @@ class ProductAdminController extends Controller
         $query = trim((string) $request->query('q', ''));
         $categoryFilter = trim((string) $request->query('category', ''));
         $sackColorFilter = trim((string) $request->query('sackColor', ''));
+        $sort = $this->resolveSort((string) $request->query('sort', 'latest'));
         $pageSize = $this->resolvePageSize((int) $request->query('pageSize', 10), [5, 10, 20, 50, 100], 10);
 
         $builder = Product::query()->with(['category'])->withCount('nutritions');
@@ -57,13 +58,15 @@ class ProductAdminController extends Controller
         }
 
         $filteredCount = (clone $builder)->count();
-        $products = $builder->orderByDesc('created_at')->paginate($pageSize)->withQueryString();
+        $this->applySort($builder, $sort);
+        $products = $builder->paginate($pageSize)->withQueryString();
 
         return view('admin.products.index', [
             'products' => $products,
             'query' => $query,
             'categoryFilter' => $categoryFilter,
             'sackColorFilter' => $sackColorFilter,
+            'sort' => $sort,
             'categoryOptions' => Category::query()->orderBy('order_number')->orderBy('name')->get(['id', 'name']),
             'sackColorOptions' => Product::query()->select('sack_color')->distinct()->orderBy('sack_color')->pluck('sack_color'),
             'pageSize' => $pageSize,
@@ -270,6 +273,30 @@ class ProductAdminController extends Controller
     private function resolvePageSize(int $requested, array $allowed, int $default): int
     {
         return in_array($requested, $allowed, true) ? $requested : $default;
+    }
+
+    /**
+     * Resolve allowed sort key.
+     */
+    private function resolveSort(string $requested): string
+    {
+        $allowed = ['latest', 'code_asc', 'code_desc', 'name_asc', 'name_desc'];
+
+        return in_array($requested, $allowed, true) ? $requested : 'latest';
+    }
+
+    /**
+     * Apply selected sorting.
+     */
+    private function applySort($builder, string $sort): void
+    {
+        match ($sort) {
+            'code_asc' => $builder->orderBy('code'),
+            'code_desc' => $builder->orderByDesc('code'),
+            'name_asc' => $builder->orderBy('name'),
+            'name_desc' => $builder->orderByDesc('name'),
+            default => $builder->orderByDesc('created_at'),
+        };
     }
 
     /**

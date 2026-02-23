@@ -16,7 +16,7 @@
                 </div>
             </x-slot:header>
 
-            <form method="GET" class="grid gap-3 border-b border-slate-200 bg-white p-4 sm:grid-cols-4 sm:p-6">
+            <form method="GET" class="grid gap-3 border-b border-slate-200 bg-white p-4 sm:grid-cols-5 sm:p-6">
                 <div class="sm:col-span-2">
                     <label class="mb-1 block text-xs font-semibold text-slate-700">Search</label>
                     <input type="text" name="q" value="{{ $query }}" class="w-full rounded-xl border border-slate-300 px-3 py-2 text-sm" placeholder="Search code, name, category...">
@@ -46,7 +46,17 @@
                         @endforeach
                     </select>
                 </div>
-                <div class="sm:col-span-3">
+                <div>
+                    <label class="mb-1 block text-xs font-semibold text-slate-700">Sort By</label>
+                    <select name="sort" class="w-full rounded-xl border border-slate-300 px-3 py-2 text-sm">
+                        <option value="latest" @selected($sort === 'latest')>Latest</option>
+                        <option value="code_asc" @selected($sort === 'code_asc')>Code A-Z</option>
+                        <option value="code_desc" @selected($sort === 'code_desc')>Code Z-A</option>
+                        <option value="name_asc" @selected($sort === 'name_asc')>Name A-Z</option>
+                        <option value="name_desc" @selected($sort === 'name_desc')>Name Z-A</option>
+                    </select>
+                </div>
+                <div class="sm:col-span-4">
                     <label class="mb-1 block text-xs font-semibold text-slate-700">Rows</label>
                     <select name="pageSize" class="w-32 rounded-xl border border-slate-300 px-3 py-2 text-sm">
                         @foreach([5,10,20,50,100] as $size)

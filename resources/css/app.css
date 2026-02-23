@@ -20,3 +20,46 @@ html {
     -webkit-line-clamp: 2;
     overflow: hidden;
 }
+
+.catalog-hero-stroke {
+    -webkit-text-stroke: 1px rgba(255, 255, 255, 0.98);
+    text-shadow:
+        0 1px 0 rgba(255, 255, 255, 0.98),
+        1px 0 0 rgba(255, 255, 255, 0.98),
+        -1px 0 0 rgba(255, 255, 255, 0.98),
+        0 -1px 0 rgba(255, 255, 255, 0.98),
+        0 2px 10px rgba(0, 0, 0, 0.2);
+}
+
+.catalog-hero-chip-title {
+    -webkit-text-stroke: 0.6px rgba(255, 255, 255, 0.95);
+}
+
+/* Fine-tuning for laptop screens around 1920x1080 */
+@media (min-width: 1700px) and (max-height: 1120px) {
+    .catalog-main {
+        padding-top: 0.75rem;
+        padding-bottom: 0.75rem;
+    }
+
+    .catalog-page {
+        gap: 0.875rem;
+    }
+
+    .catalog-hero-swiper {
+        height: 340px !important;
+    }
+
+    .catalog-panel {
+        border-radius: 1rem;
+    }
+
+    .catalog-card {
+        padding: 0.75rem !important;
+    }
+
+    .catalog-footer {
+        padding-top: 0.875rem !important;
+        padding-bottom: 0.875rem !important;
+    }
+}

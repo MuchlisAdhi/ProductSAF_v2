@@ -1,47 +1,53 @@
 @extends('layouts.app')
 
 @section('content')
-    <section class="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
-        <div class="border-b border-slate-200 bg-slate-50/60 px-4 py-4 sm:px-6">
-            <div class="flex items-center justify-between gap-3">
-                <a href="{{ $backHref }}" class="inline-flex min-h-[44px] items-center gap-2 rounded-xl px-3 py-2 text-sm font-semibold text-slate-700 hover:bg-white hover:text-emerald-700 focus:outline-none focus:ring-2 focus:ring-amber-300/80">
-                    <x-lucide-arrow-left class="h-4 w-4" />
-                    Back
-                </a>
-                <span class="rounded-full bg-white px-3 py-1 text-xs font-semibold text-slate-600 ring-1 ring-slate-200">{{ $filteredCount }} produk</span>
-            </div>
-            <h1 class="mt-3 text-lg font-semibold text-slate-900">{{ $title }}</h1>
-            <p class="text-xs text-slate-600 sm:text-sm">{{ $subtitle }}</p>
-            @if($categoryMeta)
-                <div class="mt-1 inline-flex items-center gap-2 rounded-full bg-sky-100 px-2.5 py-1 text-xs font-semibold text-sky-800">
-                    @include('partials.category-icon', [
-                        'icon' => $categoryMeta['icon'],
-                        'alt' => $categoryMeta['name'],
-                        'imgClass' => 'h-4 w-4 text-sky-700',
-                        'textClass' => 'text-[10px] font-semibold text-sky-700',
-                    ])
-                    <span>{{ $categoryMeta['name'] }}</span>
+    <section class="catalog-page space-y-5">
+        <div class="catalog-panel relative overflow-hidden rounded-3xl border border-white/70 bg-white/90 p-5 shadow-sm backdrop-blur sm:p-6">
+            <div class="absolute -right-20 -top-16 h-52 w-52 rounded-full bg-emerald-200/35 blur-3xl"></div>
+            <div class="absolute -bottom-16 -left-16 h-52 w-52 rounded-full bg-amber-200/30 blur-3xl"></div>
+            <div class="relative flex flex-wrap items-start justify-between gap-3">
+                <div>
+                    <a href="{{ $backHref }}" class="inline-flex items-center gap-2 rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs font-semibold text-slate-700 transition hover:border-emerald-300 hover:text-emerald-700">
+                        <x-lucide-arrow-left class="h-4 w-4" />
+                        Back
+                    </a>
+                    <h1 class="mt-3 text-2xl font-semibold text-slate-900 sm:text-3xl">{{ $title }}</h1>
+                    <p class="mt-1 text-sm text-slate-600">{{ $subtitle }}</p>
+                    @if($categoryMeta)
+                        <div class="mt-2 inline-flex items-center gap-2 rounded-full border border-sky-200 bg-sky-50 px-2.5 py-1 text-xs font-semibold text-sky-700">
+                            @include('partials.category-icon', [
+                                'icon' => $categoryMeta['icon'],
+                                'alt' => $categoryMeta['name'],
+                                'imgClass' => 'h-4 w-4',
+                                'textClass' => 'text-[10px] font-semibold',
+                            ])
+                            <span>{{ $categoryMeta['name'] }}</span>
+                        </div>
+                    @endif
                 </div>
-            @endif
+                <span class="inline-flex items-center rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1 text-xs font-semibold text-emerald-700">
+                    {{ $filteredCount }} produk
+                </span>
+            </div>
         </div>
 
-        <div class="border-b border-slate-200 bg-white p-4 sm:p-6">
-            <form method="GET" action="{{ $basePath }}" class="grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
+        <div class="catalog-panel overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm">
+            <form method="GET" action="{{ $basePath }}" class="grid gap-3 border-b border-slate-200 p-4 sm:grid-cols-2 sm:p-5 lg:grid-cols-6">
                 <div class="sm:col-span-2">
-                    <label class="mb-1 block text-xs font-semibold text-slate-700">Search</label>
+                    <label class="mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-600">Search</label>
                     <input
                         type="text"
                         name="q"
                         value="{{ $query }}"
                         placeholder="Search code, name, description..."
-                        class="min-h-[44px] w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm placeholder:text-slate-400 focus:border-emerald-500/40 focus:outline-none focus:ring-2 focus:ring-amber-200/80"
+                        class="w-full rounded-xl border border-slate-300 px-3 py-2 text-sm focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-100"
                     />
                 </div>
 
                 @if($categories->count() > 0)
                     <div>
-                        <label class="mb-1 block text-xs font-semibold text-slate-700">Category</label>
-                        <select name="category" class="min-h-[44px] w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm focus:border-emerald-500/40 focus:outline-none focus:ring-2 focus:ring-amber-200/80">
+                        <label class="mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-600">Category</label>
+                        <select name="category" class="w-full rounded-xl border border-slate-300 px-3 py-2 text-sm focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-100">
                             <option value="">All Categories</option>
                             @foreach($categories as $category)
                                 <option value="{{ $category->id }}" @selected($categoryFilter === $category->id)>{{ $category->name }}</option>
@@ -51,8 +57,8 @@
                 @endif
 
                 <div>
-                    <label class="mb-1 block text-xs font-semibold text-slate-700">Sack Color</label>
-                    <select name="sackColor" class="min-h-[44px] w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm focus:border-emerald-500/40 focus:outline-none focus:ring-2 focus:ring-amber-200/80">
+                    <label class="mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-600">Sack Color</label>
+                    <select name="sackColor" class="w-full rounded-xl border border-slate-300 px-3 py-2 text-sm focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-100">
                         <option value="">All Colors</option>
                         @foreach($sackColors as $color)
                             @php
@@ -67,63 +73,72 @@
                     </select>
                 </div>
 
-                <div class="grid grid-cols-2 gap-2">
-                    <div>
-                        <label class="mb-1 block text-xs font-semibold text-slate-700">Rows</label>
-                        <select name="pageSize" class="min-h-[44px] w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm focus:border-emerald-500/40 focus:outline-none focus:ring-2 focus:ring-amber-200/80">
-                            @foreach([6, 12, 24, 48] as $size)
-                                <option value="{{ $size }}" @selected($pageSize === $size)>{{ $size }}</option>
-                            @endforeach
-                        </select>
-                    </div>
-                    <div class="flex items-end">
-                        <input type="hidden" name="page" value="1">
-                        <button type="submit" class="min-h-[44px] w-full rounded-xl bg-slate-900 px-3 py-2 text-sm font-semibold text-white hover:bg-slate-800">Apply</button>
-                    </div>
+                <div>
+                    <label class="mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-600">Sort By</label>
+                    <select name="sort" class="w-full rounded-xl border border-slate-300 px-3 py-2 text-sm focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-100">
+                        <option value="latest" @selected($sort === 'latest')>Latest</option>
+                        <option value="code_asc" @selected($sort === 'code_asc')>Code A-Z</option>
+                        <option value="code_desc" @selected($sort === 'code_desc')>Code Z-A</option>
+                        <option value="name_asc" @selected($sort === 'name_asc')>Name A-Z</option>
+                        <option value="name_desc" @selected($sort === 'name_desc')>Name Z-A</option>
+                    </select>
+                </div>
+
+                <div>
+                    <label class="mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-600">Rows</label>
+                    <select name="pageSize" class="w-full rounded-xl border border-slate-300 px-3 py-2 text-sm focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-100">
+                        @foreach([6, 12, 24, 48] as $size)
+                            <option value="{{ $size }}" @selected($pageSize === $size)>{{ $size }}</option>
+                        @endforeach
+                    </select>
+                </div>
+
+                <div class="sm:col-span-2 lg:col-span-6 flex items-center justify-between gap-2">
+                    <input type="hidden" name="page" value="1">
+                    <a href="{{ $basePath }}" class="inline-flex items-center rounded-lg px-3 py-2 text-xs font-semibold text-slate-600 transition hover:bg-slate-100 hover:text-slate-900">Reset filters</a>
+                    <button type="submit" class="inline-flex items-center rounded-lg bg-emerald-700 px-4 py-2 text-sm font-semibold text-white transition hover:bg-emerald-600">Apply</button>
                 </div>
             </form>
 
-            <div class="mt-3 flex justify-end">
-                <a href="{{ $basePath }}" class="text-xs font-semibold text-slate-600 hover:text-slate-900">Reset filters</a>
-            </div>
-        </div>
-
-        <div class="p-4 sm:p-6">
-            @if($products->count() === 0)
-                <div class="rounded-xl border border-slate-200 bg-slate-50 p-4 text-sm text-slate-700">No products found for current filters.</div>
-            @else
-                <div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-                    @foreach($products as $product)
-                        <a href="{{ route('products.show', $product->id) }}?returnTo={{ urlencode(request()->fullUrl()) }}" class="rounded-xl border border-slate-200 bg-white p-4 shadow-sm transition hover:border-emerald-300 hover:shadow-md focus:outline-none focus:ring-2 focus:ring-amber-300/80">
-                            <div class="flex items-start gap-4">
-                                <div class="w-16 shrink-0 overflow-hidden rounded-lg border border-slate-200 bg-white">
-                                    <img src="{{ $product->image?->system_path ?? 'https://placehold.co/120x180/e2e8f0/334155?text=No+Image' }}" alt="{{ $product->code }}" class="h-20 w-16 object-cover">
-                                </div>
-                                <div class="min-w-0 flex-1">
-                                    <p class="text-xs font-semibold text-emerald-700">{{ $product->code }}</p>
-                                    <p class="mt-0.5 line-clamp-2 text-sm font-semibold text-slate-900">{{ $product->name }}</p>
-                                    <div class="mt-2 flex flex-wrap items-center gap-2">
-                                        <x-sack-color-badge :color="$product->sack_color" variant="outline" class="px-2 py-0.5" />
-                                        @if($product->category)
-                                            <span class="rounded-full bg-sky-100 px-2 py-0.5 text-[11px] font-semibold text-sky-800">{{ $product->category->name }}</span>
-                                        @endif
+            <div class="p-4 sm:p-5">
+                @if($products->count() === 0)
+                    <div class="rounded-xl border border-dashed border-slate-300 bg-slate-50 p-4 text-sm text-slate-600">
+                        No products found for current filters.
+                    </div>
+                @else
+                    <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                        @foreach($products as $product)
+                            <a href="{{ route('products.show', $product->id) }}?returnTo={{ urlencode(request()->fullUrl()) }}" class="catalog-card group rounded-2xl border border-slate-200 bg-white p-4 transition hover:-translate-y-0.5 hover:border-emerald-300 hover:shadow-md">
+                                <div class="flex items-start gap-3">
+                                    <div class="h-24 w-20 shrink-0 overflow-hidden rounded-lg border border-slate-200 bg-slate-50">
+                                        <img src="{{ $product->image?->system_path ?? 'https://placehold.co/120x180/e2e8f0/334155?text=No+Image' }}" alt="{{ $product->code }}" class="h-full w-full object-cover">
                                     </div>
-                                    <p class="mt-2 line-clamp-2 text-xs text-slate-600">{{ $product->description }}</p>
+                                    <div class="min-w-0 flex-1">
+                                        <p class="text-sm font-semibold tracking-wide text-emerald-700">{{ $product->code }}</p>
+                                        <p class="mt-1 line-clamp-2 text-base font-semibold text-slate-900">{{ $product->name }}</p>
+                                        <div class="mt-2 flex flex-wrap items-center gap-2">
+                                            <x-sack-color-badge :color="$product->sack_color" variant="outline" class="px-2 py-0.5" />
+                                            @if($product->category)
+                                                <span class="rounded-full bg-sky-100 px-2 py-0.5 text-[11px] font-semibold text-sky-800">{{ $product->category->name }}</span>
+                                            @endif
+                                        </div>
+                                        <p class="mt-2 line-clamp-2 text-xs text-slate-600">{{ $product->description }}</p>
+                                    </div>
                                 </div>
-                            </div>
-                        </a>
-                    @endforeach
-                </div>
-            @endif
-        </div>
+                            </a>
+                        @endforeach
+                    </div>
+                @endif
+            </div>
 
-        <div class="flex flex-col gap-3 border-t border-slate-200 bg-slate-50/60 px-4 py-3 sm:flex-row sm:items-center sm:justify-between sm:px-6">
-            <p class="text-sm text-slate-600">
-                Showing <span class="font-semibold text-slate-900">{{ $products->count() }}</span>
-                of <span class="font-semibold text-slate-900">{{ $filteredCount }}</span> products
-                ({{ $totalCount }} total)
-            </p>
-            {{ $products->onEachSide(1)->links() }}
+            <div class="flex flex-col gap-3 border-t border-slate-200 bg-slate-50/70 px-4 py-3 sm:flex-row sm:items-center sm:justify-between sm:px-6">
+                <p class="text-sm text-slate-600">
+                    Showing <span class="font-semibold text-slate-900">{{ $products->count() }}</span>
+                    of <span class="font-semibold text-slate-900">{{ $filteredCount }}</span> products
+                    ({{ $totalCount }} total)
+                </p>
+                {{ $products->onEachSide(1)->links() }}
+            </div>
         </div>
     </section>
 @endsection

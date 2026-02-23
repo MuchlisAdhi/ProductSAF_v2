@@ -34,6 +34,7 @@ class CatalogController extends Controller
         $query = trim((string) $request->query('q', ''));
         $categoryFilter = trim((string) $request->query('category', ''));
         $sackColorFilter = trim((string) $request->query('sackColor', ''));
+        $sort = $this->resolveSort((string) $request->query('sort', 'latest'));
         $pageSize = $this->resolvePageSize((int) $request->query('pageSize', 12), [6, 12, 24, 48], 12);
 
         $builder = Product::query()->with(['image', 'category']);
@@ -60,7 +61,8 @@ class CatalogController extends Controller
 
         $totalCount = Product::query()->count();
         $filteredCount = (clone $builder)->count();
-        $products = $builder->orderByDesc('created_at')->paginate($pageSize)->withQueryString();
+        $this->applySort($builder, $sort);
+        $products = $builder->paginate($pageSize)->withQueryString();
 
         return view('catalog.products', [
             'title' => 'Semua Produk',
@@ -72,6 +74,7 @@ class CatalogController extends Controller
             'query' => $query,
             'categoryFilter' => $categoryFilter,
             'sackColorFilter' => $sackColorFilter,
+            'sort' => $sort,
             'categories' => Category::query()->orderBy('order_number')->orderBy('name')->get(['id', 'name']),
             'sackColors' => Product::query()
                 ->select('sack_color')
@@ -94,6 +97,7 @@ class CatalogController extends Controller
 
         $query = trim((string) $request->query('q', ''));
         $sackColorFilter = trim((string) $request->query('sackColor', ''));
+        $sort = $this->resolveSort((string) $request->query('sort', 'latest'));
         $pageSize = $this->resolvePageSize((int) $request->query('pageSize', 12), [6, 12, 24, 48], 12);
 
         $builder = Product::query()
@@ -115,7 +119,8 @@ class CatalogController extends Controller
 
         $totalCount = Product::query()->where('category_id', $category->id)->count();
         $filteredCount = (clone $builder)->count();
-        $products = $builder->orderByDesc('created_at')->paginate($pageSize)->withQueryString();
+        $this->applySort($builder, $sort);
+        $products = $builder->paginate($pageSize)->withQueryString();
 
         return view('catalog.products', [
             'title' => $category->name,
@@ -127,6 +132,7 @@ class CatalogController extends Controller
             'query' => $query,
             'categoryFilter' => '',
             'sackColorFilter' => $sackColorFilter,
+            'sort' => $sort,
             'categories' => collect(),
             'sackColors' => Product::query()
                 ->where('category_id', $category->id)
@@ -173,5 +179,29 @@ class CatalogController extends Controller
     private function resolvePageSize(int $requested, array $allowed, int $default): int
     {
         return in_array($requested, $allowed, true) ? $requested : $default;
+    }
+
+    /**
+     * Resolve allowed sort key.
+     */
+    private function resolveSort(string $requested): string
+    {
+        $allowed = ['latest', 'code_asc', 'code_desc', 'name_asc', 'name_desc'];
+
+        return in_array($requested, $allowed, true) ? $requested : 'latest';
+    }
+
+    /**
+     * Apply selected sorting.
+     */
+    private function applySort($builder, string $sort): void
+    {
+        match ($sort) {
+            'code_asc' => $builder->orderBy('code'),
+            'code_desc' => $builder->orderByDesc('code'),
+            'name_asc' => $builder->orderBy('name'),
+            'name_desc' => $builder->orderByDesc('name'),
+            default => $builder->orderByDesc('created_at'),
+        };
     }
 }
