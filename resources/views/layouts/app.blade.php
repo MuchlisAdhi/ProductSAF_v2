@@ -24,8 +24,8 @@
                     class="h-10 w-10 shrink-0 object-contain sm:h-12 sm:w-10"
                 >
                 <div class="min-w-0 leading-tight">
-                    <div class="text-sm font-semibold text-white sm:text-base">Sidoagung Farm</div>
-                    <div class="text-[11px] text-white/80 sm:text-xs">Menjadi tuan rumah di negeri sendiri</div>
+                    <div class="text-sm font-semibold text-white sm:text-base">PT. Sidoagung Farm</div>
+                    <div class="text-[11px] text-white/80 sm:text-xs">Menjadi Tuan Rumah Di Negeri Sendiri</div>
                 </div>
             </a>
 
