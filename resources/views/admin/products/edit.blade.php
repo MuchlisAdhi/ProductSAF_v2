@@ -16,7 +16,7 @@
             @php
                 $action = route('admin.products.update', $product->id);
                 $method = 'PUT';
-                $submitLabel = 'Save Product Changes';
+                $submitLabel = 'Simpan Perubahan';
                 $nutritionRows = old(
                     'nutritions',
                     $product->nutritions->map(fn($nutrition) => [

@@ -34,7 +34,7 @@ class CatalogController extends Controller
         $query = trim((string) $request->query('q', ''));
         $categoryFilter = trim((string) $request->query('category', ''));
         $sackColorFilter = trim((string) $request->query('sackColor', ''));
-        $sort = $this->resolveSort((string) $request->query('sort', 'latest'));
+        $sort = $this->resolveSort((string) $request->query('sort', 'code_asc'));
         $pageSize = $this->resolvePageSize((int) $request->query('pageSize', 12), [6, 12, 24, 48], 12);
 
         $builder = Product::query()->with(['image', 'category']);
@@ -66,10 +66,10 @@ class CatalogController extends Controller
 
         return view('catalog.products', [
             'title' => 'Semua Produk',
-            'subtitle' => 'Gunakan filter dan pagination berbasis query parameter.',
+            'subtitle' => 'Gunakan filter dan penomoran halaman berbasis parameter kueri.',
             'basePath' => '/products',
             'backHref' => '/',
-            'backLabel' => 'Back',
+            'backLabel' => 'Kembali',
             'products' => $products,
             'query' => $query,
             'categoryFilter' => $categoryFilter,
@@ -97,7 +97,7 @@ class CatalogController extends Controller
 
         $query = trim((string) $request->query('q', ''));
         $sackColorFilter = trim((string) $request->query('sackColor', ''));
-        $sort = $this->resolveSort((string) $request->query('sort', 'latest'));
+        $sort = $this->resolveSort((string) $request->query('sort', 'code_asc'));
         $pageSize = $this->resolvePageSize((int) $request->query('pageSize', 12), [6, 12, 24, 48], 12);
 
         $builder = Product::query()
@@ -127,7 +127,7 @@ class CatalogController extends Controller
             'subtitle' => 'Cari produk berdasarkan kode, nama, deskripsi, atau warna karung.',
             'basePath' => "/categories/{$category->id}",
             'backHref' => '/',
-            'backLabel' => 'Back',
+            'backLabel' => 'Kembali',
             'products' => $products,
             'query' => $query,
             'categoryFilter' => '',
@@ -197,7 +197,7 @@ class CatalogController extends Controller
     {
         $allowed = ['latest', 'code_asc', 'code_desc', 'name_asc', 'name_desc'];
 
-        return in_array($requested, $allowed, true) ? $requested : 'latest';
+        return in_array($requested, $allowed, true) ? $requested : 'code_asc';
     }
 
     /**
@@ -210,7 +210,7 @@ class CatalogController extends Controller
             'code_desc' => $builder->orderByDesc('code'),
             'name_asc' => $builder->orderBy('name'),
             'name_desc' => $builder->orderByDesc('name'),
-            default => $builder->orderByDesc('created_at'),
+            default => $builder->orderBy('code'),
         };
     }
 }

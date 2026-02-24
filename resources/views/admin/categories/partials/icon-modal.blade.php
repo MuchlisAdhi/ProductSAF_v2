@@ -21,28 +21,28 @@
     <div class="w-full max-w-5xl rounded-2xl border border-slate-200 bg-white shadow-xl">
         <header class="flex items-center justify-between border-b border-slate-200 px-4 py-3 sm:px-6">
             <div>
-                <h3 class="text-base font-semibold text-slate-900">Select Category Icon</h3>
-                <p class="text-xs text-slate-600">Choose a Lucide icon name.</p>
+                <h3 class="text-base font-semibold text-slate-900">Pilih Ikon Kategori</h3>
+                <p class="text-xs text-slate-600">Pilih nama ikon Lucide.</p>
             </div>
             <button
                 type="button"
                 id="close-lucide-icon-modal"
                 class="rounded-lg border border-slate-300 px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-100"
             >
-                Close
+                Tutup
             </button>
         </header>
 
         <div class="space-y-3 p-4 sm:p-6">
             <div class="space-y-2">
-                <p class="text-xs font-semibold text-slate-700">Categories</p>
+                <p class="text-xs font-semibold text-slate-700">Kategori</p>
                 <div id="lucide-icon-nav" class="flex gap-2 overflow-x-auto pb-1"></div>
             </div>
 
             <input
                 type="text"
                 id="lucide-icon-search"
-                placeholder="Search icon name..."
+                placeholder="Cari nama ikon..."
                 class="w-full rounded-xl border border-slate-300 px-3 py-2 text-sm focus:border-emerald-600 focus:outline-none focus:ring-2 focus:ring-emerald-200"
             >
 
@@ -54,7 +54,7 @@
             ></div>
 
             <p id="lucide-icon-empty-state" class="hidden rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-xs text-slate-600">
-                No icons match your filters.
+                Tidak ada ikon yang sesuai dengan filter Anda.
             </p>
 
             <div class="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
@@ -65,14 +65,14 @@
                         id="lucide-icon-prev-page"
                         class="rounded-lg border border-slate-300 px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-40"
                     >
-                        Prev
+                        Sebelumnya
                     </button>
                     <button
                         type="button"
                         id="lucide-icon-next-page"
                         class="rounded-lg border border-slate-300 px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-40"
                     >
-                        Next
+                        Selanjutnya
                     </button>
                 </div>
             </div>
@@ -259,9 +259,9 @@
             emptyState.classList.toggle('hidden', totalMatches > 0);
 
             if (totalMatches === 0) {
-                paginationInfo.textContent = 'No icons found.';
+                paginationInfo.textContent = 'Tidak ada ikon yang ditemukan.';
             } else {
-                paginationInfo.textContent = `Page ${currentPage} of ${totalPages} (${totalMatches} icons)`;
+                paginationInfo.textContent = `Halaman ${currentPage} dari ${totalPages} (${totalMatches} ikon)`;
             }
 
             prevPageButton.disabled = totalMatches === 0 || currentPage <= 1;

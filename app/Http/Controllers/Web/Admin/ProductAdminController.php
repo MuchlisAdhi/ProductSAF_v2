@@ -33,7 +33,7 @@ class ProductAdminController extends Controller
         $query = trim((string) $request->query('q', ''));
         $categoryFilter = trim((string) $request->query('category', ''));
         $sackColorFilter = trim((string) $request->query('sackColor', ''));
-        $sort = $this->resolveSort((string) $request->query('sort', 'latest'));
+        $sort = $this->resolveSort((string) $request->query('sort', 'code_asc'));
         $pageSize = $this->resolvePageSize((int) $request->query('pageSize', 10), [5, 10, 20, 50, 100], 10);
 
         $builder = Product::query()->with(['category'])->withCount('nutritions');
@@ -282,7 +282,7 @@ class ProductAdminController extends Controller
     {
         $allowed = ['latest', 'code_asc', 'code_desc', 'name_asc', 'name_desc'];
 
-        return in_array($requested, $allowed, true) ? $requested : 'latest';
+        return in_array($requested, $allowed, true) ? $requested : 'code_asc';
     }
 
     /**
@@ -295,7 +295,7 @@ class ProductAdminController extends Controller
             'code_desc' => $builder->orderByDesc('code'),
             'name_asc' => $builder->orderBy('name'),
             'name_desc' => $builder->orderByDesc('name'),
-            default => $builder->orderByDesc('created_at'),
+            default => $builder->orderBy('code'),
         };
     }
 

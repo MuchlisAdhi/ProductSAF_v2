@@ -97,6 +97,16 @@ html {
     background: #047857;
 }
 
+.pagination-emerald-ring {
+    border: 1px solid rgba(167, 243, 208, 0.35);
+}
+
+@supports (color: color-mix(in oklab, red 50%, transparent)) {
+    .pagination-emerald-ring {
+        border-color: color-mix(in oklab, var(--color-emerald-200, #a7f3d0) 35%, transparent);
+    }
+}
+
 @keyframes catalog-skeleton-shimmer {
     0% {
         background-position: 120% 50%;

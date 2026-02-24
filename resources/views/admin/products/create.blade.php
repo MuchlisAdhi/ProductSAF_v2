@@ -16,7 +16,7 @@
             @php
                 $action = route('admin.products.store');
                 $method = 'POST';
-                $submitLabel = 'Save Product';
+                $submitLabel = 'Simpan Produk';
                 $product = null;
                 $nutritionRows = old('nutritions', [['label' => '', 'value' => '']]);
             @endphp

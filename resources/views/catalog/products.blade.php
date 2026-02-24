@@ -9,7 +9,7 @@
                 <div>
                     <a href="{{ $backHref }}" class="inline-flex items-center gap-2 rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs font-semibold text-slate-700 transition hover:border-emerald-300 hover:text-emerald-700">
                         <x-lucide-arrow-left class="h-4 w-4" />
-                        Back
+                        Kembali
                     </a>
                     <h1 class="mt-3 text-2xl font-semibold text-slate-900 sm:text-3xl">{{ $title }}</h1>
                     <p class="mt-1 text-sm text-slate-600">{{ $subtitle }}</p>
@@ -34,21 +34,21 @@
         <div class="catalog-panel overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm">
             <form method="GET" action="{{ $basePath }}" class="grid gap-3 border-b border-slate-200 p-4 sm:grid-cols-2 sm:p-5 lg:grid-cols-6">
                 <div class="sm:col-span-2">
-                    <label class="mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-600">Search</label>
+                    <label class="mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-600">Cari</label>
                     <input
                         type="text"
                         name="q"
                         value="{{ $query }}"
-                        placeholder="Search code, name, description..."
+                        placeholder="Cari kode, nama, deskripsi..."
                         class="w-full rounded-xl border border-slate-300 px-3 py-2 text-sm focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-100"
                     />
                 </div>
 
                 @if($categories->count() > 0)
                     <div>
-                        <label class="mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-600">Category</label>
+                        <label class="mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-600">Kategori</label>
                         <select name="category" class="w-full rounded-xl border border-slate-300 px-3 py-2 text-sm focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-100">
-                            <option value="">All Categories</option>
+                            <option value="">Semua Kategori</option>
                             @foreach($categories as $category)
                                 <option value="{{ $category->id }}" @selected($categoryFilter === $category->id)>{{ $category->name }}</option>
                             @endforeach
@@ -57,9 +57,9 @@
                 @endif
 
                 <div>
-                    <label class="mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-600">Sack Color</label>
+                    <label class="mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-600">Warna Karung</label>
                     <select name="sackColor" class="w-full rounded-xl border border-slate-300 px-3 py-2 text-sm focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-100">
-                        <option value="">All Colors</option>
+                        <option value="">Semua Warna</option>
                         @foreach($sackColors as $color)
                             @php
                                 $colorLabel = match (\Illuminate\Support\Str::lower((string) $color)) {
@@ -74,18 +74,18 @@
                 </div>
 
                 <div>
-                    <label class="mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-600">Sort By</label>
+                    <label class="mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-600">Urutkan</label>
                     <select name="sort" class="w-full rounded-xl border border-slate-300 px-3 py-2 text-sm focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-100">
-                        <option value="latest" @selected($sort === 'latest')>Latest</option>
-                        <option value="code_asc" @selected($sort === 'code_asc')>Code A-Z</option>
-                        <option value="code_desc" @selected($sort === 'code_desc')>Code Z-A</option>
-                        <option value="name_asc" @selected($sort === 'name_asc')>Name A-Z</option>
-                        <option value="name_desc" @selected($sort === 'name_desc')>Name Z-A</option>
+                        <option value="latest" @selected($sort === 'latest')>Terbaru</option>
+                        <option value="code_asc" @selected($sort === 'code_asc')>Kode A-Z</option>
+                        <option value="code_desc" @selected($sort === 'code_desc')>Kode Z-A</option>
+                        <option value="name_asc" @selected($sort === 'name_asc')>Nama A-Z</option>
+                        <option value="name_desc" @selected($sort === 'name_desc')>Nama Z-A</option>
                     </select>
                 </div>
 
                 <div>
-                    <label class="mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-600">Rows</label>
+                    <label class="mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-600">Jumlah Baris</label>
                     <select name="pageSize" class="w-full rounded-xl border border-slate-300 px-3 py-2 text-sm focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-100">
                         @foreach([6, 12, 24, 48] as $size)
                             <option value="{{ $size }}" @selected($pageSize === $size)>{{ $size }}</option>
@@ -95,8 +95,8 @@
 
                 <div class="sm:col-span-2 lg:col-span-6 flex items-center justify-between gap-2">
                     <input type="hidden" name="page" value="1">
-                    <a href="{{ $basePath }}" class="inline-flex items-center rounded-lg px-3 py-2 text-xs font-semibold text-slate-600 transition hover:bg-slate-100 hover:text-slate-900">Reset filters</a>
-                    <button type="submit" class="inline-flex items-center rounded-lg bg-emerald-700 px-4 py-2 text-sm font-semibold text-white transition hover:bg-emerald-600">Apply</button>
+                    <a href="{{ $basePath }}" class="inline-flex items-center rounded-lg px-3 py-2 text-xs font-semibold text-slate-600 transition hover:bg-slate-100 hover:text-slate-900">Setel ulang filter</a>
+                    <button type="submit" class="inline-flex items-center rounded-lg bg-emerald-700 px-4 py-2 text-sm font-semibold text-white transition hover:bg-emerald-600">Terapkan</button>
                 </div>
             </form>
 
@@ -108,10 +108,10 @@
                         </span>
                         <h3 class="mt-3 text-base font-semibold text-slate-900">Produk tidak ditemukan</h3>
                         <p class="mx-auto mt-1 max-w-lg text-sm text-slate-600">
-                            Coba ubah filter pencarian, kategori, atau warna karung. Kamu juga bisa reset filter untuk melihat semua produk lagi.
+                            Coba ubah filter pencarian, kategori, atau warna karung. Anda juga bisa setel ulang filter untuk melihat semua produk lagi.
                         </p>
                         <a href="{{ $basePath }}" class="mt-4 inline-flex items-center rounded-lg bg-emerald-700 px-4 py-2 text-sm font-semibold text-white transition hover:bg-emerald-600">
-                            Reset Filter
+                            Setel ulang filter
                         </a>
                     </div>
                 @else
@@ -148,13 +148,8 @@
                 @endif
             </div>
 
-            <div class="flex flex-col gap-3 border-t border-slate-200 bg-slate-50/70 px-4 py-3 sm:flex-row sm:items-center sm:justify-between sm:px-6">
-                <p class="text-sm text-slate-600">
-                    Showing <span class="font-semibold text-slate-900">{{ $products->count() }}</span>
-                    of <span class="font-semibold text-slate-900">{{ $filteredCount }}</span> products
-                    ({{ $totalCount }} total)
-                </p>
-                {{ $products->onEachSide(1)->links() }}
+            <div class="border-t border-slate-200 bg-slate-50/70 px-4 py-3 sm:px-6">
+                {{ $products->onEachSide(1)->links('vendor.pagination.custom') }}
             </div>
         </div>
     </section>

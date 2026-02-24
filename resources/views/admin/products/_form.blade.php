@@ -7,7 +7,7 @@
     $selectedCategoryId = old('category_id', $product->category_id ?? ($categories->first()->id ?? ''));
     $fieldClass = 'w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm placeholder:text-slate-400 focus:border-emerald-500/40 focus:outline-none focus:ring-2 focus:ring-amber-200/80';
     $initialImagePath = (string) ($product?->image?->system_path ?? '');
-    $initialImageLabel = (string) ($product?->image?->original_file_name ?? 'Current image');
+    $initialImageLabel = (string) ($product?->image?->original_file_name ?? 'Gambar saat ini');
     $removeImageFlag = old('remove_image', '0') === '1';
     $showInitialImage = $initialImagePath !== '' && ! $removeImageFlag;
 @endphp
@@ -20,13 +20,13 @@
 
     <x-admin.module variant="table">
         <x-slot:header>
-            <h2 class="text-base font-semibold text-slate-900">Product Configuration</h2>
-            <p class="text-xs text-slate-600">Fill product identity, category, and image.</p>
+            <h2 class="text-base font-semibold text-slate-900">Konfigurasi Produk</h2>
+            <p class="text-xs text-slate-600">Isi identitas produk, kategori, dan gambar.</p>
         </x-slot:header>
 
         <div class="grid gap-4 p-4 sm:grid-cols-2 sm:p-6">
             <div>
-                <label class="mb-1 block text-xs font-semibold text-slate-700">Code</label>
+                <label class="mb-1 block text-xs font-semibold text-slate-700">Kode</label>
                 <input name="code" value="{{ old('code', $product->code ?? '') }}" class="{{ $fieldClass }}" placeholder="SA 571 NS" required>
             </div>
             <div>
@@ -34,13 +34,13 @@
                 <input name="name" value="{{ old('name', $product->name ?? '') }}" class="{{ $fieldClass }}" placeholder="Pakan Starter Broiler" required>
             </div>
             <div class="sm:col-span-2">
-                <label class="mb-1 block text-xs font-semibold text-slate-700">Description</label>
-                <textarea name="description" rows="3" class="{{ $fieldClass }}" placeholder="Product description" required>{{ old('description', $product->description ?? '') }}</textarea>
+                <label class="mb-1 block text-xs font-semibold text-slate-700">Keterangan</label>
+                <textarea name="description" rows="3" class="{{ $fieldClass }}" placeholder="Keterangan produk" required>{{ old('description', $product->description ?? '') }}</textarea>
             </div>
             <div>
-                <label class="mb-1 block text-xs font-semibold text-slate-700">Sack Color</label>
+                <label class="mb-1 block text-xs font-semibold text-slate-700">Warna Karung</label>
                 <select name="sack_color" class="{{ $fieldClass }}" required>
-                    <option value="">Select sack color</option>
+                    <option value="">Pilih warna karung</option>
                     @foreach($sackColors as $color)
                         <option value="{{ $color }}" @selected($selectedSackColor === $color)>{{ $color }}</option>
                     @endforeach
@@ -50,7 +50,7 @@
                 </select>
             </div>
             <div>
-                <label class="mb-1 block text-xs font-semibold text-slate-700">Category</label>
+                <label class="mb-1 block text-xs font-semibold text-slate-700">Kategori</label>
                 <select name="category_id" class="{{ $fieldClass }}" required>
                     @foreach($categories as $category)
                         <option value="{{ $category->id }}" @selected($selectedCategoryId === $category->id)>{{ $category->name }}</option>
@@ -58,12 +58,12 @@
                 </select>
             </div>
             <div class="sm:col-span-2">
-                <label class="mb-1 block text-xs font-semibold text-slate-700">Product Image</label>
+                <label class="mb-1 block text-xs font-semibold text-slate-700">Gambar Produk</label>
                 <div class="rounded-xl border border-slate-200 bg-slate-50 p-3">
                     <div class="flex flex-wrap items-center gap-2">
                         <label for="product-image-input" class="inline-flex cursor-pointer items-center gap-2 rounded-lg bg-emerald-700 px-3 py-2 text-sm font-semibold text-white hover:bg-emerald-600">
                             <x-lucide-upload class="h-4 w-4" />
-                            Upload
+                            Unggah gambar
                         </label>
                         <input id="product-image-input" type="file" name="image" accept="image/*" class="hidden">
 
@@ -73,7 +73,7 @@
                             class="{{ $showInitialImage ? '' : 'hidden' }} inline-flex items-center gap-2 rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-semibold text-slate-700 hover:bg-red-50 hover:text-red-700"
                         >
                             <x-lucide-trash-2 class="h-4 w-4" />
-                            Remove image
+                            Hapus gambar
                         </button>
 
                         <input id="remove-image-flag" type="hidden" name="remove_image" value="{{ $removeImageFlag ? '1' : '0' }}">
@@ -90,11 +90,11 @@
                                 class="{{ $showInitialImage ? '' : 'hidden' }} h-full w-full object-cover"
                                 loading="lazy"
                             >
-                            <p id="product-image-empty-state" class="{{ $showInitialImage ? 'hidden' : '' }} px-2 text-center text-[11px] font-medium text-slate-500">No image</p>
+                            <p id="product-image-empty-state" class="{{ $showInitialImage ? 'hidden' : '' }} px-2 text-center text-[11px] font-medium text-slate-500">Tidak ada gambar</p>
                         </div>
                         <div class="min-w-0">
                             <p id="product-image-name" class="truncate text-xs font-semibold text-slate-700">
-                                {{ $showInitialImage ? $initialImageLabel : 'No image uploaded yet.' }}
+                                {{ $showInitialImage ? $initialImageLabel : 'Tidak ada gambar yang diunggah.' }}
                             </p>
                             <p id="product-image-helper" class="text-xs text-slate-500">
                                 JPG/PNG/WebP, max 10MB.
@@ -110,12 +110,12 @@
         <x-slot:header>
             <div class="flex items-center justify-between gap-3">
                 <div>
-                    <h2 class="text-base font-semibold text-slate-900">Nutrition List</h2>
-                    <p class="text-xs text-slate-600">Add one or more nutrition parameters in table format.</p>
+                    <h2 class="text-base font-semibold text-slate-900">Daftar Nutrisi</h2>
+                    <p class="text-xs text-slate-600">Tambah satu atau lebih parameter nutrisi dalam format tabel.</p>
                 </div>
                 <button type="button" id="add-nutrition-row" class="inline-flex items-center gap-2 rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-100">
                     <x-lucide-plus class="h-4 w-4" />
-                    Add Row
+                    Tambah Baris
                 </button>
             </div>
         </x-slot:header>
@@ -126,8 +126,8 @@
                     <tr class="bg-emerald-700 text-white">
                         <th class="w-16 px-3 py-2 text-left text-xs font-semibold">No</th>
                         <th class="px-3 py-2 text-left text-xs font-semibold">Parameter</th>
-                        <th class="px-3 py-2 text-left text-xs font-semibold">Value</th>
-                        <th class="w-20 px-3 py-2 text-center text-xs font-semibold">Action</th>
+                        <th class="px-3 py-2 text-left text-xs font-semibold">Nilai</th>
+                        <th class="w-20 px-3 py-2 text-center text-xs font-semibold">Aksi</th>
                     </tr>
                 </thead>
                 <tbody id="nutrition-table-body">
@@ -141,7 +141,7 @@
                                 <input name="nutritions[{{ $index }}][value]" value="{{ $nutrition['value'] }}" class="{{ $fieldClass }}" required>
                             </td>
                             <td class="px-3 py-2 text-center">
-                                <button type="button" class="remove-nutrition-row inline-flex h-9 w-9 items-center justify-center rounded-lg border border-slate-200 text-slate-600 hover:bg-red-50 hover:text-red-700" aria-label="Delete nutrition row">
+                                <button type="button" class="remove-nutrition-row inline-flex h-9 w-9 items-center justify-center rounded-lg border border-slate-200 text-slate-600 hover:bg-red-50 hover:text-red-700" aria-label="Hapus baris nutrisi">
                                     <x-lucide-trash-2 class="h-4 w-4" />
                                 </button>
                             </td>
@@ -153,7 +153,7 @@
     </x-admin.module>
 
     <div class="flex justify-end gap-2">
-        <a href="{{ route('admin.products.index') }}" class="rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-100">Back</a>
+        <a href="{{ route('admin.products.index') }}" class="rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-100">Kembali</a>
         <button type="submit" class="inline-flex items-center gap-2 rounded-xl bg-emerald-700 px-4 py-2 text-sm font-semibold text-white hover:bg-emerald-600">{{ $submitLabel }}</button>
     </div>
 </form>
@@ -224,7 +224,7 @@
 
         const hasInitialImage = String(imagePreview.dataset.initialSrc || '').trim() !== '';
         const initialImageSrc = String(imagePreview.dataset.initialSrc || '');
-        const initialImageLabel = String(imagePreview.dataset.initialLabel || 'Current image');
+        const initialImageLabel = String(imagePreview.dataset.initialLabel || 'Gambar saat ini');
         let temporaryObjectUrl = null;
 
         const setRemoveButtonVisible = (visible) => {
@@ -259,7 +259,7 @@
         if (!imagePreview.classList.contains('hidden') && imagePreview.getAttribute('src')) {
             setRemoveButtonVisible(true);
         } else {
-            showEmptyState('No image uploaded yet.', 'JPG/PNG/WebP, max 10MB.');
+            showEmptyState('Belum ada gambar yang diunggah.', 'JPG/PNG/WebP, max 10MB.');
         }
 
         imageInput.addEventListener('change', () => {
@@ -268,7 +268,7 @@
                 if (hasInitialImage && removeImageFlag.value !== '1') {
                     showImage(initialImageSrc, initialImageLabel);
                 } else {
-                    showEmptyState('No image uploaded yet.', 'JPG/PNG/WebP, max 10MB.');
+                    showEmptyState('Belum ada gambar yang diunggah.', 'JPG/PNG/WebP, max 10MB.');
                 }
                 return;
             }
@@ -285,10 +285,10 @@
 
             if (hasInitialImage) {
                 removeImageFlag.value = '1';
-                showEmptyState('Image will be removed on save.', 'Click Upload to replace with new image.');
+                showEmptyState('Gambar akan dihapus saat menyimpan.', 'Klik Unggah untuk mengganti dengan gambar baru.');
             } else {
                 removeImageFlag.value = '0';
-                showEmptyState('No image uploaded yet.', 'JPG/PNG/WebP, max 10MB.');
+                showEmptyState('Belum ada gambar yang diunggah.', 'JPG/PNG/WebP, max 10MB.');
             }
         });
     })();

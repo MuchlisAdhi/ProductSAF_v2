@@ -19,17 +19,17 @@
 
         <div class="catalog-panel overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm">
             <div class="border-b border-slate-200 bg-slate-50 px-4 py-3 sm:px-6">
-                <h2 class="text-sm font-semibold uppercase tracking-wide text-slate-700">Preview Produk</h2>
+                <h2 class="text-sm font-semibold uppercase tracking-wide text-slate-700">Pratinjau Produk</h2>
             </div>
             <div class="p-4 sm:p-5">
                 <div class="rounded-2xl border border-slate-200 bg-gradient-to-br from-slate-100 via-white to-slate-200 p-4 sm:p-6">
                     <div class="mb-3 flex flex-wrap items-center justify-end gap-3">
                         <div class="inline-flex items-center gap-2 rounded-lg bg-white/90 p-1 ring-1 ring-slate-200">
-                            <button type="button" id="product-zoom-out" class="rounded-md p-2 text-slate-700 transition hover:bg-slate-100" aria-label="Zoom out">
+                            <button type="button" id="product-zoom-out" class="rounded-md p-2 text-slate-700 transition hover:bg-slate-100" aria-label="Perbesar">
                                 <x-lucide-zoom-out class="h-4 w-4" />
                             </button>
                             <button type="button" id="product-zoom-reset" class="rounded-md px-2 py-1 text-xs font-semibold text-slate-700 transition hover:bg-slate-100">100%</button>
-                            <button type="button" id="product-zoom-in" class="rounded-md p-2 text-slate-700 transition hover:bg-slate-100" aria-label="Zoom in">
+                            <button type="button" id="product-zoom-in" class="rounded-md p-2 text-slate-700 transition hover:bg-slate-100" aria-label="Perkecil">
                                 <x-lucide-zoom-in class="h-4 w-4" />
                             </button>
                         </div>
@@ -47,22 +47,35 @@
                             data-lightbox-trigger
                         >
                     </div>
-                    <p class="mt-2 text-center text-xs text-slate-500">Gunakan tombol zoom atau scroll mouse di atas gambar.</p>
+                    <p class="mt-2 text-center text-xs text-slate-500">Gunakan tombol perbesar atau gulir mouse di atas gambar.</p>
                 </div>
             </div>
         </div>
 
-        <div id="product-lightbox" class="fixed inset-0 z-[80] hidden items-center justify-center bg-black/90 p-4">
-            <button id="product-lightbox-close" type="button" class="absolute right-4 top-4 z-10 rounded-full bg-white/10 p-2 text-white backdrop-blur transition hover:bg-white/20" aria-label="Tutup preview">
+        <div class="catalog-panel overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm">
+            <div class="border-b border-slate-200 bg-slate-50 px-4 py-3 sm:px-6">
+                <h2 class="text-sm font-semibold uppercase tracking-wide text-slate-700">Deskripsi Produk</h2>
+            </div>
+            <div class="p-4 sm:p-5">
+                @if(trim((string) $product->description) !== '')
+                    <p class="mx-auto max-w-3xl whitespace-pre-line text-center text-sm leading-relaxed text-slate-700">{!! nl2br(e($product->description)) !!}</p>
+                @else
+                    <p class="text-center text-sm text-slate-500">Deskripsi produk belum tersedia.</p>
+                @endif
+            </div>
+        </div>
+
+        <div id="product-lightbox" class="fixed inset-0 z-[80] hidden items-center justify-center bg-black/95 p-3 sm:p-4">
+            <button id="product-lightbox-close" type="button" class="absolute right-4 top-4 z-10 rounded-full bg-white/10 p-2 text-white backdrop-blur transition hover:bg-white/20" aria-label="Tutup pratinjau">
                 <x-lucide-x class="h-5 w-5" />
             </button>
-            <div id="product-lightbox-stage" class="relative flex h-full w-full items-center justify-center overflow-hidden touch-none">
+            <div id="product-lightbox-stage" class="relative flex h-full w-full select-none items-center justify-center overflow-hidden touch-none">
                 <div class="catalog-skeleton absolute inset-0 m-auto max-h-[92vh] max-w-[92vw] rounded-xl"></div>
                 <img
                     id="product-lightbox-image"
                     src="{{ $product->image?->system_path ?? 'https://placehold.co/900x1200/e2e8f0/334155?text=No+Image' }}"
                     alt="{{ $product->code }}"
-                    class="catalog-lazy-image max-h-[92vh] max-w-[92vw] origin-center object-contain will-change-transform"
+                    class="catalog-lazy-image absolute left-1/2 top-1/2 max-h-[92vh] max-w-[92vw] origin-center object-contain will-change-transform"
                     draggable="false"
                 >
             </div>
@@ -84,7 +97,7 @@
                 <span class="mx-auto grid h-10 w-10 place-items-center rounded-xl bg-emerald-100 text-emerald-700">
                     <x-lucide-tag class="h-5 w-5" />
                 </span>
-                <p class="mt-3 text-[11px] font-semibold uppercase tracking-wide text-emerald-700">Code</p>
+                <p class="mt-3 text-[11px] font-semibold uppercase tracking-wide text-emerald-700">Kode</p>
                 <p class="mt-1 text-base font-semibold text-slate-900">{{ $product->code }}</p>
             </div>
             <div class="rounded-2xl border border-amber-200 bg-amber-50 p-4 text-center">
@@ -140,7 +153,7 @@
                 <div class="flex flex-wrap items-center justify-between gap-3 border-b border-slate-200 bg-slate-50 px-4 py-3 sm:px-6">
                     <div>
                         <h3 class="text-base font-semibold text-slate-900">Produk Terkait</h3>
-                        <p class="text-xs text-slate-600">Produk lain dalam kategori yang sama untuk navigasi lebih cepat.</p>
+                        <p class="text-xs text-slate-600">Produk lain dalam kategori yang sama.</p>
                     </div>
                     <div class="inline-flex items-center gap-2">
                         <button type="button" class="related-products-prev inline-flex h-8 w-8 items-center justify-center rounded-full border border-slate-300 bg-white text-slate-700 transition hover:border-emerald-300 hover:text-emerald-700" aria-label="Slide sebelumnya">
@@ -452,6 +465,7 @@
                 bodyOverflowBackup = document.body.style.overflow;
                 document.body.style.overflow = 'hidden';
                 resetLightboxScale();
+                requestAnimationFrame(resetLightboxScale);
             };
 
             const closeLightbox = () => {
@@ -535,7 +549,7 @@
                 lightboxImage.style.transition = lightboxIsDragging
                     ? 'transform 0s'
                     : 'transform 220ms cubic-bezier(0.22, 1, 0.36, 1)';
-                lightboxImage.style.transform = `translate(${lightboxOffsetX}px, ${lightboxOffsetY}px) scale(${lightboxScale})`;
+                lightboxImage.style.transform = `translate3d(-50%, -50%, 0) translate3d(${lightboxOffsetX}px, ${lightboxOffsetY}px, 0) scale(${lightboxScale})`;
                 lightboxZoomResetButton.textContent = `${Math.round(lightboxScale * 100)}%`;
                 lightboxStage.classList.toggle('cursor-grab', lightboxScale > 1 && !lightboxIsDragging);
                 lightboxStage.classList.toggle('cursor-grabbing', lightboxIsDragging);
@@ -568,6 +582,10 @@
             });
 
             lightboxZoomResetButton.addEventListener('click', resetLightboxScale);
+            lightboxImage.addEventListener('load', () => {
+                if (lightbox.classList.contains('hidden')) return;
+                requestAnimationFrame(resetLightboxScale);
+            });
 
             lightboxStage.addEventListener('wheel', (event) => {
                 event.preventDefault();
