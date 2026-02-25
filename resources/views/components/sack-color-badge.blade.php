@@ -36,15 +36,20 @@
         default => ['#e5e7eb', '#374151', '#9ca3af'],
     };
 
-    $style = $isOutline
+    $baseStyle = 'display:inline-flex;align-items:center;justify-content:center;white-space:nowrap;'
+        . 'border-radius:9999px;padding:0.2rem 0.62rem;line-height:1.25;font-weight:600;';
+
+    $toneStyle = $isOutline
         ? "border:1px solid {$borderColor};background:#fff;color:{$textColor};"
         : "background:{$background};color:{$textColor};border:1px solid rgba(0,0,0,.05);";
+
+    $style = $baseStyle . $toneStyle;
 
     $resolvedClass = trim((string) $class);
 @endphp
 
 <span
-    {{ $attributes->class("badge rounded-pill fw-semibold {$resolvedClass}") }}
+    {{ $attributes->class("badge rounded-pill rounded-full fw-semibold inline-flex items-center justify-center whitespace-nowrap leading-tight {$resolvedClass}") }}
     style="{{ $style }}"
 >
     {{ $displayValue !== '' ? $displayValue : '-' }}
