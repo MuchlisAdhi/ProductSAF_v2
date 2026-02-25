@@ -5,10 +5,17 @@
         <section id="top" class="catalog-panel relative overflow-hidden rounded-3xl border border-slate-200 shadow-sm">
             <div class="swiper hero-swiper catalog-hero-swiper h-[320px] sm:h-[400px] lg:h-[500px] 2xl:h-[560px]">
                 <div class="swiper-wrapper">
-                    @foreach(['/images/bg-office.jpeg', '/images/bg-silo1.jpeg', '/images/bg-silo2.jpeg', '/images/bg-silo3.jpeg'] as $slideImage)
+                    @foreach(['/images/bg-office.jpeg', '/images/bg-silo1.jpeg', '/images/bg-silo2.jpeg', '/images/bg-silo3.jpeg'] as $index => $slideImage)
                         <div class="swiper-slide">
                             <div class="h-full w-full">
-                                <img src="{{ asset($slideImage) }}" alt="Sidoagung Hero Background" class="h-full w-full object-cover">
+                                <img
+                                    src="{{ asset($slideImage) }}"
+                                    alt="Sidoagung Hero Background"
+                                    class="h-full w-full object-cover"
+                                    loading="{{ $index === 0 ? 'eager' : 'lazy' }}"
+                                    decoding="async"
+                                    fetchpriority="{{ $index === 0 ? 'high' : 'low' }}"
+                                >
                             </div>
                         </div>
                     @endforeach

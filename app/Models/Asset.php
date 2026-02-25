@@ -17,6 +17,7 @@ class Asset extends Model
     protected $fillable = [
         'original_file_name',
         'system_path',
+        'thumbnail_path',
         'mime_type',
         'size',
     ];

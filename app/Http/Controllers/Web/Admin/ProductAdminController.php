@@ -7,8 +7,10 @@ use App\Http\Controllers\Controller;
 use App\Models\Asset;
 use App\Models\Category;
 use App\Models\Product;
+use App\Support\ImageOptimizer;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
@@ -36,7 +38,10 @@ class ProductAdminController extends Controller
         $sort = $this->resolveSort((string) $request->query('sort', 'code_asc'));
         $pageSize = $this->resolvePageSize((int) $request->query('pageSize', 10), [5, 10, 20, 50, 100], 10);
 
-        $builder = Product::query()->with(['category'])->withCount('nutritions');
+        $builder = Product::query()
+            ->select(['id', 'code', 'name', 'sack_color', 'category_id', 'created_at'])
+            ->with(['category:id,name'])
+            ->withCount('nutritions');
 
         if ($query !== '') {
             $builder->where(function ($q) use ($query): void {
@@ -67,10 +72,22 @@ class ProductAdminController extends Controller
             'categoryFilter' => $categoryFilter,
             'sackColorFilter' => $sackColorFilter,
             'sort' => $sort,
-            'categoryOptions' => Category::query()->orderBy('order_number')->orderBy('name')->get(['id', 'name']),
-            'sackColorOptions' => Product::query()->select('sack_color')->distinct()->orderBy('sack_color')->pluck('sack_color'),
+            'categoryOptions' => Cache::remember(
+                'admin.products.categories',
+                now()->addMinutes(10),
+                fn () => Category::query()->orderBy('order_number')->orderBy('name')->get(['id', 'name'])
+            ),
+            'sackColorOptions' => Cache::remember(
+                'admin.products.sack_colors',
+                now()->addMinutes(10),
+                fn () => Product::query()->select('sack_color')->distinct()->orderBy('sack_color')->pluck('sack_color')
+            ),
             'pageSize' => $pageSize,
-            'totalCount' => Product::query()->count(),
+            'totalCount' => Cache::remember(
+                'admin.products.total_count',
+                now()->addMinutes(10),
+                fn () => Product::query()->count()
+            ),
             'filteredCount' => $filteredCount,
             'roleLabel' => $role instanceof Role ? $role->value : (string) $role,
         ]);
@@ -84,7 +101,11 @@ class ProductAdminController extends Controller
         $role = Auth::user()->role;
 
         return view('admin.products.create', [
-            'categories' => Category::query()->orderBy('order_number')->orderBy('name')->get(),
+            'categories' => Cache::remember(
+                'admin.products.categories',
+                now()->addMinutes(10),
+                fn () => Category::query()->orderBy('order_number')->orderBy('name')->get(['id', 'name'])
+            ),
             'sackColors' => $this->sackColors,
             'roleLabel' => $role instanceof Role ? $role->value : (string) $role,
         ]);
@@ -108,6 +129,8 @@ class ProductAdminController extends Controller
             $this->syncNutritions($product, (array) $request->input('nutritions'));
         });
 
+        $this->clearProductCaches();
+
         return redirect()->route('admin.products.index')->with('success', 'Product has been created.');
     }
 
@@ -119,8 +142,17 @@ class ProductAdminController extends Controller
         $role = Auth::user()->role;
 
         return view('admin.products.edit', [
-            'product' => Product::query()->with(['nutritions', 'image'])->findOrFail($id),
-            'categories' => Category::query()->orderBy('order_number')->orderBy('name')->get(),
+            'product' => Product::query()
+                ->with([
+                    'nutritions:id,product_id,label,value',
+                    'image:id,system_path,thumbnail_path,original_file_name',
+                ])
+                ->findOrFail($id),
+            'categories' => Cache::remember(
+                'admin.products.categories',
+                now()->addMinutes(10),
+                fn () => Category::query()->orderBy('order_number')->orderBy('name')->get(['id', 'name'])
+            ),
             'sackColors' => $this->sackColors,
             'roleLabel' => $role instanceof Role ? $role->value : (string) $role,
         ]);
@@ -149,6 +181,8 @@ class ProductAdminController extends Controller
             $this->syncNutritions($product, (array) $request->input('nutritions'));
         });
 
+        $this->clearProductCaches();
+
         return redirect()->route('admin.products.index')->with('success', 'Product has been updated.');
     }
 
@@ -158,6 +192,7 @@ class ProductAdminController extends Controller
     public function destroy(string $id): RedirectResponse
     {
         Product::query()->findOrFail($id)->delete();
+        $this->clearProductCaches();
 
         return back()->with('success', 'Product deleted.');
     }
@@ -175,6 +210,7 @@ class ProductAdminController extends Controller
         ]);
 
         $count = Product::query()->whereIn('id', $payload['ids'])->delete();
+        $this->clearProductCaches();
 
         return back()->with('success', "{$count} products deleted.");
     }
@@ -212,33 +248,14 @@ class ProductAdminController extends Controller
     private function storeUploadedAsset(Request $request): string
     {
         $file = $request->file('image');
-        $extension = $file->getClientOriginalExtension() ?: 'jpg';
-        $filename = now()->timestamp.'-'.Str::uuid().'.'.$extension;
-        $originalFileName = (string) $file->getClientOriginalName();
-        $mimeType = (string) ($file->getClientMimeType() ?: $file->getMimeType() ?: 'application/octet-stream');
-        $size = (int) ($file->getSize() ?? 0);
-
-        if ($size <= 0) {
-            $realPath = $file->getRealPath();
-            if (is_string($realPath) && $realPath !== '' && is_file($realPath)) {
-                $resolvedSize = @filesize($realPath);
-                $size = is_int($resolvedSize) ? $resolvedSize : 0;
-            }
-        }
-
-        $destination = public_path('uploads');
-
-        if (! is_dir($destination)) {
-            mkdir($destination, 0755, true);
-        }
-
-        $file->move($destination, $filename);
+        $optimized = (new ImageOptimizer())->store($file, 'uploads');
 
         $asset = Asset::query()->create([
-            'original_file_name' => $originalFileName !== '' ? $originalFileName : $filename,
-            'system_path' => '/uploads/'.$filename,
-            'mime_type' => $mimeType,
-            'size' => $size,
+            'original_file_name' => $optimized['original_file_name'],
+            'system_path' => $optimized['system_path'],
+            'thumbnail_path' => $optimized['thumbnail_path'],
+            'mime_type' => $optimized['mime_type'],
+            'size' => $optimized['size'],
         ]);
 
         return $asset->id;
@@ -291,6 +308,7 @@ class ProductAdminController extends Controller
     private function applySort($builder, string $sort): void
     {
         match ($sort) {
+            'latest' => $builder->orderByDesc('created_at'),
             'code_asc' => $builder->orderBy('code'),
             'code_desc' => $builder->orderByDesc('code'),
             'name_asc' => $builder->orderBy('name'),
@@ -309,5 +327,23 @@ class ProductAdminController extends Controller
             'pink', 'merah muda' => 'Merah Muda',
             default => trim($value),
         };
+    }
+
+    /**
+     * Clear cache keys used by catalog and admin product listings.
+     */
+    private function clearProductCaches(): void
+    {
+        foreach ([
+            'admin.products.categories',
+            'admin.products.sack_colors',
+            'admin.products.total_count',
+            'catalog.home.categories',
+            'catalog.products.categories',
+            'catalog.products.sack_colors',
+            'catalog.products.total_count',
+        ] as $cacheKey) {
+            Cache::forget($cacheKey);
+        }
     }
 }

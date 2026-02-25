@@ -1,38 +1,37 @@
 @extends('layouts.admin')
 
 @section('content')
-    <div class="space-y-6">
-        @include('admin.partials.hero', [
-            'badge' => 'Product Management',
-            'title' => 'Manajemen Produk',
-            'subtitle' => 'Kelola data produk, filter, dan bulk action.',
-        ])
+    @include('admin.partials.hero', [
+        'badge' => 'Product Management',
+        'title' => 'Manajemen Produk',
+        'subtitle' => 'Kelola produk dan filter data katalog.',
+    ])
 
-        <x-admin.module variant="table">
-            <x-slot:header>
-                <div class="flex items-center justify-between">
-                    <h2 class="text-base font-semibold text-slate-900">Daftar Produk</h2>
-                    <a href="{{ route('admin.products.create') }}" class="rounded-lg bg-emerald-700 px-3 py-2 text-sm font-semibold text-white hover:bg-emerald-600">Tambah Produk</a>
+    <div class="card border-0 shadow mb-4">
+        <div class="card-header border-bottom d-flex justify-content-between align-items-center">
+            <h2 class="fs-5 fw-bold mb-0">Daftar Produk</h2>
+            <a href="{{ route('admin.products.create') }}" class="btn btn-sm btn-primary">
+                Tambah Produk
+            </a>
+        </div>
+        <div class="card-body border-bottom">
+            <form method="GET" class="row g-3">
+                <div class="col-12 col-lg-3">
+                    <label class="form-label">Cari</label>
+                    <input type="text" name="q" value="{{ $query }}" class="form-control" placeholder="Kode, nama, kategori">
                 </div>
-            </x-slot:header>
-
-            <form method="GET" class="grid gap-3 border-b border-slate-200 bg-white p-4 sm:grid-cols-5 sm:p-6">
-                <div class="sm:col-span-2">
-                    <label class="mb-1 block text-xs font-semibold text-slate-700">Cari</label>
-                    <input type="text" name="q" value="{{ $query }}" class="w-full rounded-xl border border-slate-300 px-3 py-2 text-sm" placeholder="Cari kode, nama, kategori...">
-                </div>
-                <div>
-                    <label class="mb-1 block text-xs font-semibold text-slate-700">Kategori</label>
-                    <select name="category" class="w-full rounded-xl border border-slate-300 px-3 py-2 text-sm">
+                <div class="col-12 col-md-4 col-lg-2">
+                    <label class="form-label">Kategori</label>
+                    <select name="category" class="form-select">
                         <option value="">Semua Kategori</option>
                         @foreach($categoryOptions as $category)
                             <option value="{{ $category->id }}" @selected($categoryFilter === $category->id)>{{ $category->name }}</option>
                         @endforeach
                     </select>
                 </div>
-                <div>
-                    <label class="mb-1 block text-xs font-semibold text-slate-700">Warna Karung</label>
-                    <select name="sackColor" class="w-full rounded-xl border border-slate-300 px-3 py-2 text-sm">
+                <div class="col-12 col-md-4 col-lg-2">
+                    <label class="form-label">Warna Karung</label>
+                    <select name="sackColor" class="form-select">
                         <option value="">Semua Warna</option>
                         @foreach($sackColorOptions as $color)
                             @php
@@ -46,9 +45,9 @@
                         @endforeach
                     </select>
                 </div>
-                <div>
-                    <label class="mb-1 block text-xs font-semibold text-slate-700">Urutkan Berdasarkan</label>
-                    <select name="sort" class="w-full rounded-xl border border-slate-300 px-3 py-2 text-sm">
+                <div class="col-12 col-md-4 col-lg-2">
+                    <label class="form-label">Urutkan</label>
+                    <select name="sort" class="form-select">
                         <option value="latest" @selected($sort === 'latest')>Terbaru</option>
                         <option value="code_asc" @selected($sort === 'code_asc')>Kode A-Z</option>
                         <option value="code_desc" @selected($sort === 'code_desc')>Kode Z-A</option>
@@ -56,96 +55,107 @@
                         <option value="name_desc" @selected($sort === 'name_desc')>Nama Z-A</option>
                     </select>
                 </div>
-                <div class="sm:col-span-4">
-                    <label class="mb-1 block text-xs font-semibold text-slate-700">Jumlah Baris</label>
-                    <select name="pageSize" class="w-32 rounded-xl border border-slate-300 px-3 py-2 text-sm">
+                <div class="col-12 col-md-4 col-lg-1">
+                    <label class="form-label">Rows</label>
+                    <select name="pageSize" class="form-select">
                         @foreach([5,10,20,50,100] as $size)
                             <option value="{{ $size }}" @selected($pageSize === $size)>{{ $size }}</option>
                         @endforeach
                     </select>
                 </div>
-                <div class="flex items-end justify-end">
+                <div class="col-12 col-lg-2 d-flex align-items-end justify-content-lg-end gap-2">
                     <input type="hidden" name="page" value="1">
-                    <button type="submit" class="rounded-lg bg-slate-900 px-3 py-2 text-sm font-semibold text-white hover:bg-slate-800">Terapkan Filter</button>
+                    <button type="submit" class="btn btn-primary">Terapkan</button>
+                    <a href="{{ route('admin.products.index') }}" class="btn btn-outline-secondary">Reset</a>
                 </div>
             </form>
+        </div>
 
-            <div class="border-b border-slate-200 bg-white px-4 py-3">
-                <button type="button" id="bulk-delete-button" class="rounded-lg border border-red-300 bg-red-50 px-3 py-2 text-sm font-semibold text-red-700 hover:bg-red-100">Hapus Terpilih</button>
-            </div>
-            <div class="overflow-x-auto">
-                <table class="min-w-full">
-                    <thead>
-                        <tr class="bg-emerald-700 text-white">
-                            <th class="w-10 px-3 py-2 text-left text-xs font-semibold"></th>
-                            <th class="px-3 py-2 text-left text-xs font-semibold">No</th>
-                            <th class="px-3 py-2 text-left text-xs font-semibold">Kode</th>
-                            <th class="px-3 py-2 text-left text-xs font-semibold">Nama</th>
-                            <th class="px-3 py-2 text-left text-xs font-semibold">Kategori</th>
-                            <th class="px-3 py-2 text-left text-xs font-semibold">Warna Kemasan</th>
-                            <th class="px-3 py-2 text-left text-xs font-semibold">Nutrisi</th>
-                            <th class="px-3 py-2 text-left text-xs font-semibold">Dibuat</th>
-                            <th class="px-3 py-2 text-center text-xs font-semibold">Aksi</th>
+        <div class="card-body border-bottom d-flex justify-content-between align-items-center">
+            <small class="text-muted">Menampilkan {{ $filteredCount }} dari {{ $totalCount }} produk</small>
+            <button type="button" id="bulk-delete-button" class="btn btn-sm btn-danger">
+                <i class="bi bi-trash me-1"></i>Hapus Terpilih
+            </button>
+        </div>
+
+        <div class="table-responsive">
+            <table class="table table-centered table-nowrap mb-0 rounded">
+                <thead class="thead-light">
+                    <tr>
+                        <th class="border-0">
+                            <input type="checkbox" id="check-all-products">
+                        </th>
+                        <th class="border-0">No</th>
+                        <th class="border-0">Kode</th>
+                        <th class="border-0">Nama</th>
+                        <th class="border-0">Kategori</th>
+                        <th class="border-0">Warna</th>
+                        <th class="border-0">Nutrisi</th>
+                        <th class="border-0">Dibuat</th>
+                        <th class="border-0 text-center">Aksi</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @forelse($products as $index => $product)
+                        <tr>
+                            <td>
+                                <input type="checkbox" value="{{ $product->id }}" class="bulk-product-checkbox">
+                            </td>
+                            <td>{{ ($products->currentPage() - 1) * $products->perPage() + $index + 1 }}</td>
+                            <td><span class="fw-bold text-primary">{{ $product->code }}</span></td>
+                            <td>{{ $product->name }}</td>
+                            <td>{{ $product->category->name }}</td>
+                            <td><x-sack-color-badge :color="$product->sack_color" class="px-2 py-1" /></td>
+                            <td>{{ $product->nutritions_count }}</td>
+                            <td>{{ optional($product->created_at)->format('d/m/Y') }}</td>
+                            <td class="text-center">
+                                <a href="{{ route('admin.products.edit', $product->id) }}" class="btn btn-sm btn-outline-secondary">
+                                    <i class="bi bi-pencil"></i>
+                                </a>
+                                <form method="POST" action="{{ route('admin.products.destroy', $product->id) }}" class="d-inline-block" onsubmit="return confirm('Hapus produk ini?')">
+                                    @csrf
+                                    @method('DELETE')
+                                    <button type="submit" class="btn btn-sm btn-outline-danger">
+                                        <i class="bi bi-trash"></i>
+                                    </button>
+                                </form>
+                            </td>
                         </tr>
-                    </thead>
-                    <tbody>
-                        @forelse($products as $index => $product)
-                            <tr class="border-t border-slate-200 bg-white">
-                                <td class="px-3 py-2">
-                                    <input type="checkbox" value="{{ $product->id }}" class="bulk-product-checkbox h-4 w-4 rounded border-slate-300 text-emerald-700">
-                                </td>
-                                <td class="px-3 py-2 text-sm text-slate-600">{{ ($products->currentPage() - 1) * $products->perPage() + $index + 1 }}</td>
-                                <td class="px-3 py-2 text-sm font-semibold text-emerald-700">{{ $product->code }}</td>
-                                <td class="px-3 py-2 text-sm text-slate-900">{{ $product->name }}</td>
-                                <td class="px-3 py-2 text-sm text-slate-700">{{ $product->category->name }}</td>
-                                <td class="px-3 py-2 text-sm text-slate-700">
-                                    <x-sack-color-badge :color="$product->sack_color" class="px-2 py-0.5" />
-                                </td>
-                                <td class="px-3 py-2 text-sm text-slate-700">{{ $product->nutritions_count }}</td>
-                                <td class="px-3 py-2 text-sm text-slate-600">{{ optional($product->created_at)->format('d/m/Y') }}</td>
-                                <td class="px-3 py-2">
-                                    <div class="flex items-center justify-center gap-2">
-                                        <a href="{{ route('admin.products.edit', $product->id) }}" class="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-slate-300 text-slate-700 hover:bg-slate-100" aria-label="Ubah produk {{ $product->name }}">
-                                            <x-lucide-pencil class="h-4 w-4" />
-                                        </a>
-                                        <form method="POST" action="{{ route('admin.products.destroy', $product->id) }}" onsubmit="return confirm('Hapus produk ini?')">
-                                            @csrf
-                                            @method('DELETE')
-                                            <button type="submit" class="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-red-300 text-red-700 hover:bg-red-50" aria-label="Hapus produk {{ $product->name }}">
-                                                <x-lucide-trash-2 class="h-4 w-4" />
-                                            </button>
-                                        </form>
-                                    </div>
-                                </td>
-                            </tr>
-                        @empty
-                            <tr>
-                                <td colspan="9" class="px-4 py-6 text-center text-sm text-slate-600">Tidak ada produk ditemukan.</td>
-                            </tr>
-                        @endforelse
-                    </tbody>
-                </table>
-            </div>
+                    @empty
+                        <tr>
+                            <td colspan="9" class="text-center py-4">Tidak ada produk ditemukan.</td>
+                        </tr>
+                    @endforelse
+                </tbody>
+            </table>
+        </div>
 
-            <x-slot:footer>
-                <div class="w-full">
-                    {{ $products->onEachSide(1)->links('vendor.pagination.custom') }}
-                </div>
-            </x-slot:footer>
-        </x-admin.module>
+        <div class="card-footer px-3 border-0 d-flex flex-column flex-lg-row justify-content-between align-items-center">
+            <small class="fw-normal small mb-3 mb-lg-0">Halaman {{ $products->currentPage() }} dari {{ $products->lastPage() }}</small>
+            {{ $products->onEachSide(1)->links('pagination::bootstrap-5') }}
+        </div>
     </div>
 
-    <form id="bulk-delete-form" method="POST" action="{{ route('admin.products.bulk-delete') }}" class="hidden">
+    <form id="bulk-delete-form" method="POST" action="{{ route('admin.products.bulk-delete') }}" class="d-none">
         @csrf
         <div id="bulk-delete-inputs"></div>
     </form>
+@endsection
 
+@push('scripts')
     <script>
         (() => {
             const button = document.getElementById('bulk-delete-button');
             const form = document.getElementById('bulk-delete-form');
             const container = document.getElementById('bulk-delete-inputs');
+            const checkAll = document.getElementById('check-all-products');
             if (!button || !form || !container) return;
+
+            checkAll?.addEventListener('change', () => {
+                document.querySelectorAll('.bulk-product-checkbox').forEach((checkbox) => {
+                    checkbox.checked = checkAll.checked;
+                });
+            });
 
             button.addEventListener('click', () => {
                 const checked = Array.from(document.querySelectorAll('.bulk-product-checkbox:checked'));
@@ -167,4 +177,4 @@
             });
         })();
     </script>
-@endsection
+@endpush

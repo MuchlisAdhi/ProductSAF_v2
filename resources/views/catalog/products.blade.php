@@ -122,12 +122,15 @@
                                     <div class="relative h-24 w-20 shrink-0 overflow-hidden rounded-lg border border-slate-200 bg-slate-50">
                                         <div class="catalog-skeleton absolute inset-0"></div>
                                         <img
-                                            src="{{ $product->image?->system_path ?? 'https://placehold.co/120x180/e2e8f0/334155?text=No+Image' }}"
+                                            src="{{ $product->image?->thumbnail_path ?? $product->image?->system_path ?? 'https://placehold.co/120x180/e2e8f0/334155?text=No+Image' }}"
                                             alt="{{ $product->code }}"
                                             class="h-full w-full object-cover catalog-lazy-image transition-opacity duration-300"
                                             data-lazy-image
                                             loading="lazy"
                                             decoding="async"
+                                            fetchpriority="low"
+                                            width="120"
+                                            height="180"
                                         >
                                     </div>
                                     <div class="min-w-0 flex-1">

@@ -17,61 +17,47 @@
     $iconSvgTemplate = route('admin.lucide-icons.svg', ['name' => '__ICON__']);
 @endphp
 
-<div id="lucide-icon-modal" class="fixed inset-0 z-50 hidden items-center justify-center bg-slate-900/50 p-4">
-    <div class="w-full max-w-5xl rounded-2xl border border-slate-200 bg-white shadow-xl">
-        <header class="flex items-center justify-between border-b border-slate-200 px-4 py-3 sm:px-6">
-            <div>
-                <h3 class="text-base font-semibold text-slate-900">Pilih Ikon Kategori</h3>
-                <p class="text-xs text-slate-600">Pilih nama ikon Lucide.</p>
+<div class="modal fade" id="lucideIconModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-xl modal-dialog-scrollable">
+        <div class="modal-content border-0 shadow">
+            <div class="modal-header">
+                <div>
+                    <h5 class="modal-title mb-0">Pilih Ikon Kategori</h5>
+                    <small class="text-muted">Pilih nama ikon Lucide.</small>
+                </div>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Tutup"></button>
             </div>
-            <button
-                type="button"
-                id="close-lucide-icon-modal"
-                class="rounded-lg border border-slate-300 px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-100"
-            >
-                Tutup
-            </button>
-        </header>
+            <div class="modal-body">
+                <div class="mb-3">
+                    <label class="form-label">Kategori</label>
+                    <div id="lucide-icon-nav" class="d-flex flex-wrap gap-2"></div>
+                </div>
 
-        <div class="space-y-3 p-4 sm:p-6">
-            <div class="space-y-2">
-                <p class="text-xs font-semibold text-slate-700">Kategori</p>
-                <div id="lucide-icon-nav" class="flex gap-2 overflow-x-auto pb-1"></div>
-            </div>
-
-            <input
-                type="text"
-                id="lucide-icon-search"
-                placeholder="Cari nama ikon..."
-                class="w-full rounded-xl border border-slate-300 px-3 py-2 text-sm focus:border-emerald-600 focus:outline-none focus:ring-2 focus:ring-emerald-200"
-            >
-
-            <div
-                id="lucide-icon-grid"
-                data-icon-list='@json($iconOptions->values())'
-                data-icon-src-template="{{ $iconSvgTemplate }}"
-                class="grid max-h-[24rem] grid-cols-2 gap-2 overflow-y-auto sm:grid-cols-3 lg:grid-cols-4"
-            ></div>
-
-            <p id="lucide-icon-empty-state" class="hidden rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-xs text-slate-600">
-                Tidak ada ikon yang sesuai dengan filter Anda.
-            </p>
-
-            <div class="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-                <p id="lucide-icon-pagination-info" class="text-xs text-slate-600">Page 1 of 1</p>
-                <div class="flex items-center gap-2">
-                    <button
-                        type="button"
-                        id="lucide-icon-prev-page"
-                        class="rounded-lg border border-slate-300 px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-40"
+                <div class="mb-3">
+                    <input
+                        type="text"
+                        id="lucide-icon-search"
+                        placeholder="Cari nama ikon..."
+                        class="form-control"
                     >
+                </div>
+
+                <div id="lucide-icon-grid" class="row g-2"
+                    data-icon-list='@json($iconOptions->values())'
+                    data-icon-src-template="{{ $iconSvgTemplate }}"
+                ></div>
+
+                <div id="lucide-icon-empty-state" class="alert alert-secondary mt-3 d-none mb-0">
+                    Tidak ada ikon yang sesuai dengan filter Anda.
+                </div>
+            </div>
+            <div class="modal-footer d-flex justify-content-between">
+                <p id="lucide-icon-pagination-info" class="mb-0 small text-muted">Page 1 of 1</p>
+                <div class="d-flex gap-2">
+                    <button type="button" id="lucide-icon-prev-page" class="btn btn-sm btn-outline-secondary">
                         Sebelumnya
                     </button>
-                    <button
-                        type="button"
-                        id="lucide-icon-next-page"
-                        class="rounded-lg border border-slate-300 px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-40"
-                    >
+                    <button type="button" id="lucide-icon-next-page" class="btn btn-sm btn-outline-secondary">
                         Selanjutnya
                     </button>
                 </div>
@@ -80,10 +66,15 @@
     </div>
 </div>
 
+@push('scripts')
 <script>
     (() => {
-        const modal = document.getElementById('lucide-icon-modal');
-        const closeButton = document.getElementById('close-lucide-icon-modal');
+        const bootstrapInstance = window.bootstrap;
+        if (!bootstrapInstance || !bootstrapInstance.Modal) {
+            return;
+        }
+
+        const modalElement = document.getElementById('lucideIconModal');
         const searchInput = document.getElementById('lucide-icon-search');
         const nav = document.getElementById('lucide-icon-nav');
         const grid = document.getElementById('lucide-icon-grid');
@@ -91,8 +82,12 @@
         const paginationInfo = document.getElementById('lucide-icon-pagination-info');
         const prevPageButton = document.getElementById('lucide-icon-prev-page');
         const nextPageButton = document.getElementById('lucide-icon-next-page');
-        if (!modal || !closeButton || !searchInput || !nav || !grid || !emptyState || !paginationInfo || !prevPageButton || !nextPageButton) return;
 
+        if (!modalElement || !searchInput || !nav || !grid || !emptyState || !paginationInfo || !prevPageButton || !nextPageButton) {
+            return;
+        }
+
+        const modal = new bootstrapInstance.Modal(modalElement);
         const normalize = (value) => String(value || '').trim().toLowerCase();
         const initials = (value) => {
             const normalized = normalize(value);
@@ -173,17 +168,16 @@
         const createNavButton = (categoryId, label, count) => {
             const button = document.createElement('button');
             button.type = 'button';
-            button.className = 'whitespace-nowrap rounded-full border px-3 py-1 text-xs font-semibold transition';
+            button.className = 'btn btn-sm';
             button.dataset.category = categoryId;
             button.textContent = `${label} (${count})`;
 
             const isActive = activeCategory === categoryId;
-            button.classList.toggle('border-emerald-500', isActive);
-            button.classList.toggle('bg-emerald-50', isActive);
-            button.classList.toggle('text-emerald-700', isActive);
-            button.classList.toggle('border-slate-300', !isActive);
-            button.classList.toggle('bg-white', !isActive);
-            button.classList.toggle('text-slate-700', !isActive);
+            if (isActive) {
+                button.classList.add('btn-primary');
+            } else {
+                button.classList.add('btn-outline-secondary');
+            }
 
             button.addEventListener('click', () => {
                 activeCategory = categoryId;
@@ -206,35 +200,42 @@
         };
 
         const createIconButton = (iconName) => {
+            const col = document.createElement('div');
+            col.className = 'col-6 col-md-4 col-lg-3';
+
             const button = document.createElement('button');
             button.type = 'button';
             button.setAttribute('data-icon-option', '');
             button.setAttribute('data-icon-value', iconName);
-            button.className = 'flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-3 py-2 text-left text-sm font-medium text-slate-700 hover:border-emerald-300 hover:bg-emerald-50';
+            button.className = 'btn btn-outline-secondary w-100 d-flex align-items-center text-start gap-2';
 
             const iconBox = document.createElement('span');
-            iconBox.className = 'grid h-5 w-5 shrink-0 place-items-center rounded-md bg-emerald-50';
+            iconBox.className = 'd-inline-flex align-items-center justify-content-center border rounded bg-light';
+            iconBox.style.width = '28px';
+            iconBox.style.height = '28px';
 
             const iconImage = document.createElement('img');
             iconImage.src = iconUrl(iconName);
             iconImage.alt = iconName;
             iconImage.loading = 'lazy';
-            iconImage.className = 'h-4 w-4';
+            iconImage.className = 'img-fluid';
+            iconImage.style.maxWidth = '16px';
+            iconImage.style.maxHeight = '16px';
 
             const fallback = document.createElement('span');
-            fallback.className = 'hidden text-[10px] font-bold text-emerald-700';
+            fallback.className = 'd-none small fw-bold';
             fallback.textContent = initials(iconName);
 
             iconImage.addEventListener('error', () => {
-                iconImage.classList.add('hidden');
-                fallback.classList.remove('hidden');
+                iconImage.classList.add('d-none');
+                fallback.classList.remove('d-none');
             });
 
             iconBox.appendChild(iconImage);
             iconBox.appendChild(fallback);
 
             const label = document.createElement('span');
-            label.className = 'truncate';
+            label.className = 'text-truncate';
             label.textContent = iconName;
 
             button.appendChild(iconBox);
@@ -242,7 +243,9 @@
 
             button.addEventListener('click', () => pickIcon(iconName));
 
-            return button;
+            col.appendChild(button);
+
+            return col;
         };
 
         const renderPaginatedIcons = () => {
@@ -256,7 +259,7 @@
             grid.innerHTML = '';
             visibleIcons.forEach((iconName) => grid.appendChild(createIconButton(iconName)));
 
-            emptyState.classList.toggle('hidden', totalMatches > 0);
+            emptyState.classList.toggle('d-none', totalMatches > 0);
 
             if (totalMatches === 0) {
                 paginationInfo.textContent = 'Tidak ada ikon yang ditemukan.';
@@ -278,9 +281,9 @@
             Array.from(grid.querySelectorAll('[data-icon-option]')).forEach((button) => {
                 const iconValue = normalize(button.getAttribute('data-icon-value'));
                 const isSelected = currentValue !== '' && iconValue === currentValue;
-                button.classList.toggle('border-emerald-500', isSelected);
-                button.classList.toggle('bg-emerald-50', isSelected);
-                button.classList.toggle('text-emerald-700', isSelected);
+
+                button.classList.toggle('btn-primary', isSelected);
+                button.classList.toggle('btn-outline-secondary', !isSelected);
             });
         };
 
@@ -293,9 +296,11 @@
             const iconImage = document.createElement('img');
             iconImage.src = iconUrl(iconLabel);
             iconImage.alt = iconLabel;
-            iconImage.className = 'h-5 w-5';
+            iconImage.className = 'img-fluid';
+            iconImage.style.maxWidth = '18px';
+            iconImage.style.maxHeight = '18px';
             iconImage.addEventListener('error', () => {
-                previewNode.innerHTML = `<span class="text-[11px] font-semibold text-emerald-700">${initials(iconLabel)}</span>`;
+                previewNode.innerHTML = `<span class="small fw-semibold">${initials(iconLabel)}</span>`;
             });
             previewNode.appendChild(iconImage);
 
@@ -312,7 +317,7 @@
 
             input.value = normalized;
             updatePreview(currentInputId, normalized);
-            closeModal();
+            modal.hide();
         };
 
         const applyFilters = (query = '') => {
@@ -327,21 +332,14 @@
             renderPaginatedIcons();
         };
 
-        const closeModal = () => {
-            modal.classList.add('hidden');
-            modal.classList.remove('flex');
-            currentInputId = null;
-        };
-
         const openModal = (targetInputId) => {
             currentInputId = targetInputId;
             searchInput.value = '';
             activeCategory = 'all';
             renderCategories();
             applyFilters('');
-            modal.classList.remove('hidden');
-            modal.classList.add('flex');
-            searchInput.focus();
+            modal.show();
+            setTimeout(() => searchInput.focus(), 150);
         };
 
         document.querySelectorAll('[data-open-icon-picker]').forEach((button) => {
@@ -352,29 +350,22 @@
             });
         });
 
-        closeButton.addEventListener('click', closeModal);
         prevPageButton.addEventListener('click', () => {
             if (prevPageButton.disabled) return;
             currentPage -= 1;
             renderPaginatedIcons();
         });
+
         nextPageButton.addEventListener('click', () => {
             if (nextPageButton.disabled) return;
             currentPage += 1;
             renderPaginatedIcons();
         });
-        modal.addEventListener('click', (event) => {
-            if (event.target === modal) closeModal();
-        });
+
         searchInput.addEventListener('input', (event) => {
             const target = event.target;
             if (!(target instanceof HTMLInputElement)) return;
             applyFilters(target.value);
-        });
-        document.addEventListener('keydown', (event) => {
-            if (event.key === 'Escape' && !modal.classList.contains('hidden')) {
-                closeModal();
-            }
         });
 
         buildCategoryMap();
@@ -382,3 +373,4 @@
         applyFilters('');
     })();
 </script>
+@endpush

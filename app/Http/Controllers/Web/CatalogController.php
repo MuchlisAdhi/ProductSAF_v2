@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Category;
 use App\Models\Product;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
 
 class CatalogController extends Controller
 {
@@ -14,11 +15,14 @@ class CatalogController extends Controller
      */
     public function home()
     {
-        $categories = Category::query()
-            ->withCount('products')
-            ->orderBy('order_number')
-            ->orderBy('name')
-            ->get();
+        $categories = Cache::remember('catalog.home.categories', now()->addMinutes(10), function () {
+            return Category::query()
+                ->select(['id', 'name', 'icon', 'order_number'])
+                ->withCount('products')
+                ->orderBy('order_number')
+                ->orderBy('name')
+                ->get();
+        });
 
         return view('catalog.home', [
             'categories' => $categories,
@@ -37,7 +41,12 @@ class CatalogController extends Controller
         $sort = $this->resolveSort((string) $request->query('sort', 'code_asc'));
         $pageSize = $this->resolvePageSize((int) $request->query('pageSize', 12), [6, 12, 24, 48], 12);
 
-        $builder = Product::query()->with(['image', 'category']);
+        $builder = Product::query()
+            ->select(['id', 'code', 'name', 'description', 'sack_color', 'category_id', 'image_id', 'created_at'])
+            ->with([
+                'image:id,system_path,thumbnail_path',
+                'category:id,name',
+            ]);
 
         if ($query !== '') {
             $builder->where(function ($q) use ($query): void {
@@ -59,7 +68,7 @@ class CatalogController extends Controller
             $builder->where('sack_color', $sackColorFilter);
         }
 
-        $totalCount = Product::query()->count();
+        $totalCount = Cache::remember('catalog.products.total_count', now()->addMinutes(10), fn () => Product::query()->count());
         $filteredCount = (clone $builder)->count();
         $this->applySort($builder, $sort);
         $products = $builder->paginate($pageSize)->withQueryString();
@@ -75,12 +84,16 @@ class CatalogController extends Controller
             'categoryFilter' => $categoryFilter,
             'sackColorFilter' => $sackColorFilter,
             'sort' => $sort,
-            'categories' => Category::query()->orderBy('order_number')->orderBy('name')->get(['id', 'name']),
-            'sackColors' => Product::query()
-                ->select('sack_color')
-                ->distinct()
-                ->orderBy('sack_color')
-                ->pluck('sack_color'),
+            'categories' => Cache::remember(
+                'catalog.products.categories',
+                now()->addMinutes(10),
+                fn () => Category::query()->orderBy('order_number')->orderBy('name')->get(['id', 'name'])
+            ),
+            'sackColors' => Cache::remember(
+                'catalog.products.sack_colors',
+                now()->addMinutes(10),
+                fn () => Product::query()->select('sack_color')->distinct()->orderBy('sack_color')->pluck('sack_color')
+            ),
             'pageSize' => $pageSize,
             'totalCount' => $totalCount,
             'filteredCount' => $filteredCount,
@@ -101,8 +114,9 @@ class CatalogController extends Controller
         $pageSize = $this->resolvePageSize((int) $request->query('pageSize', 12), [6, 12, 24, 48], 12);
 
         $builder = Product::query()
+            ->select(['id', 'code', 'name', 'description', 'sack_color', 'category_id', 'image_id', 'created_at'])
             ->where('category_id', $category->id)
-            ->with('image');
+            ->with('image:id,system_path,thumbnail_path');
 
         if ($query !== '') {
             $builder->where(function ($q) use ($query): void {
@@ -117,7 +131,11 @@ class CatalogController extends Controller
             $builder->where('sack_color', $sackColorFilter);
         }
 
-        $totalCount = Product::query()->where('category_id', $category->id)->count();
+        $totalCount = Cache::remember(
+            'catalog.category.'.$category->id.'.total_count',
+            now()->addMinutes(10),
+            fn () => Product::query()->where('category_id', $category->id)->count()
+        );
         $filteredCount = (clone $builder)->count();
         $this->applySort($builder, $sort);
         $products = $builder->paginate($pageSize)->withQueryString();
@@ -134,12 +152,16 @@ class CatalogController extends Controller
             'sackColorFilter' => $sackColorFilter,
             'sort' => $sort,
             'categories' => collect(),
-            'sackColors' => Product::query()
-                ->where('category_id', $category->id)
-                ->select('sack_color')
-                ->distinct()
-                ->orderBy('sack_color')
-                ->pluck('sack_color'),
+            'sackColors' => Cache::remember(
+                'catalog.category.'.$category->id.'.sack_colors',
+                now()->addMinutes(10),
+                fn () => Product::query()
+                    ->where('category_id', $category->id)
+                    ->select('sack_color')
+                    ->distinct()
+                    ->orderBy('sack_color')
+                    ->pluck('sack_color')
+            ),
             'pageSize' => $pageSize,
             'totalCount' => $totalCount,
             'filteredCount' => $filteredCount,
@@ -156,11 +178,20 @@ class CatalogController extends Controller
     public function show(Request $request, string $id)
     {
         $product = Product::query()
-            ->with(['category', 'image', 'nutritions'])
+            ->select(['id', 'code', 'name', 'description', 'sack_color', 'category_id', 'image_id'])
+            ->with([
+                'category:id,name',
+                'image:id,system_path,thumbnail_path',
+                'nutritions:id,product_id,label,value',
+            ])
             ->findOrFail($id);
 
         $relatedProducts = Product::query()
-            ->with(['image', 'category'])
+            ->select(['id', 'code', 'name', 'description', 'sack_color', 'category_id', 'image_id'])
+            ->with([
+                'image:id,system_path,thumbnail_path',
+                'category:id,name',
+            ])
             ->where('category_id', $product->category_id)
             ->where('id', '!=', $product->id)
             ->orderBy('name')
@@ -206,6 +237,7 @@ class CatalogController extends Controller
     private function applySort($builder, string $sort): void
     {
         match ($sort) {
+            'latest' => $builder->orderByDesc('created_at'),
             'code_asc' => $builder->orderBy('code'),
             'code_desc' => $builder->orderByDesc('code'),
             'name_asc' => $builder->orderBy('name'),

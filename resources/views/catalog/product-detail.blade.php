@@ -43,6 +43,10 @@
                             alt="{{ $product->code }}"
                             class="catalog-lazy-image h-auto w-full max-w-[30rem] origin-center cursor-zoom-in object-contain transition-transform duration-200 ease-out will-change-transform"
                             loading="eager"
+                            decoding="async"
+                            fetchpriority="high"
+                            width="600"
+                            height="900"
                             draggable="false"
                             data-lightbox-trigger
                         >
@@ -76,6 +80,7 @@
                     src="{{ $product->image?->system_path ?? 'https://placehold.co/900x1200/e2e8f0/334155?text=No+Image' }}"
                     alt="{{ $product->code }}"
                     class="catalog-lazy-image absolute left-1/2 top-1/2 max-h-[92vh] max-w-[92vw] origin-center object-contain will-change-transform"
+                    decoding="async"
                     draggable="false"
                 >
             </div>
@@ -174,12 +179,15 @@
                                         <div class="relative h-28 w-[5.5rem] shrink-0 overflow-hidden rounded-xl border border-slate-200 bg-slate-50">
                                             <div class="catalog-skeleton absolute inset-0"></div>
                                             <img
-                                                src="{{ $relatedProduct->image?->system_path ?? 'https://placehold.co/120x180/e2e8f0/334155?text=No+Image' }}"
+                                                src="{{ $relatedProduct->image?->thumbnail_path ?? $relatedProduct->image?->system_path ?? 'https://placehold.co/120x180/e2e8f0/334155?text=No+Image' }}"
                                                 alt="{{ $relatedProduct->code }}"
                                                 class="h-full w-full object-cover catalog-lazy-image transition-opacity duration-300"
                                                 data-lazy-image
                                                 loading="lazy"
                                                 decoding="async"
+                                                fetchpriority="low"
+                                                width="120"
+                                                height="180"
                                             >
                                         </div>
                                         <div class="min-w-0 flex-1">

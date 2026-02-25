@@ -14,6 +14,16 @@ html {
     scroll-behavior: smooth;
 }
 
+.brand-title {
+    font-family: 'Anton', Impact, Haettenschweiler, 'Arial Narrow Bold', 'Roboto Condensed', Arial, sans-serif;
+    font-weight: 400;
+}
+
+.brand-tagline {
+    font-family: 'Kaushan Script', 'Brush Script MT', 'Segoe Script', cursive;
+    font-weight: 400;
+}
+
 .line-clamp-2 {
     display: -webkit-box;
     -webkit-box-orient: vertical;

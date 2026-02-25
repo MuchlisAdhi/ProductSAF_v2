@@ -10,6 +10,7 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Str;
@@ -19,7 +20,7 @@ use Illuminate\View\View;
 class CategoryAdminController extends Controller
 {
     /**
-     * Category list + create form.
+     * Category list page.
      */
     public function index(Request $request): View
     {
@@ -29,7 +30,9 @@ class CategoryAdminController extends Controller
         $iconFilter = trim((string) $request->query('icon', ''));
         $pageSize = $this->resolvePageSize((int) $request->query('pageSize', 10), [5, 10, 20, 50, 100], 10);
 
-        $builder = Category::query()->withCount('products');
+        $builder = Category::query()
+            ->select(['id', 'name', 'icon', 'order_number'])
+            ->withCount('products');
 
         if ($query !== '') {
             $builder->where(function ($q) use ($query): void {
@@ -57,15 +60,36 @@ class CategoryAdminController extends Controller
             'categories' => $categories,
             'query' => $query,
             'iconFilter' => $iconFilter,
-            'iconOptions' => Category::query()
-                ->select('icon')
-                ->distinct()
-                ->orderBy('icon')
-                ->pluck('icon'),
+            'iconOptions' => Cache::remember(
+                'admin.categories.icon_options',
+                now()->addMinutes(10),
+                fn () => Category::query()
+                    ->select('icon')
+                    ->distinct()
+                    ->orderBy('icon')
+                    ->pluck('icon')
+            ),
             'lucideIcons' => $lucideIcons,
             'pageSize' => $pageSize,
-            'totalCount' => Category::query()->count(),
+            'totalCount' => Cache::remember(
+                'admin.categories.total_count',
+                now()->addMinutes(10),
+                fn () => Category::query()->count()
+            ),
             'filteredCount' => $filteredCount,
+            'roleLabel' => $role instanceof Role ? $role->value : (string) $role,
+        ]);
+    }
+
+    /**
+     * Show create category page.
+     */
+    public function create(): View
+    {
+        $role = Auth::user()->role;
+
+        return view('admin.categories.create', [
+            'lucideIcons' => $this->lucideIcons(),
             'roleLabel' => $role instanceof Role ? $role->value : (string) $role,
         ]);
     }
@@ -77,6 +101,7 @@ class CategoryAdminController extends Controller
     {
         $payload = $this->validatePayload($request);
         Category::query()->create($payload);
+        $this->clearCategoryCaches();
 
         return redirect()->route('admin.categories.index')->with('success', 'Category created.');
     }
@@ -104,6 +129,7 @@ class CategoryAdminController extends Controller
         $category = Category::query()->findOrFail($id);
         $payload = $this->validatePayload($request, $category->id);
         $category->update($payload);
+        $this->clearCategoryCaches();
 
         return redirect()->route('admin.categories.index')->with('success', 'Category updated.');
     }
@@ -117,6 +143,7 @@ class CategoryAdminController extends Controller
 
         try {
             $category->delete();
+            $this->clearCategoryCaches();
         } catch (QueryException $exception) {
             return back()->withErrors([
                 'error' => 'Category is used by products and cannot be deleted',
@@ -194,11 +221,29 @@ class CategoryAdminController extends Controller
             return collect(['box']);
         }
 
-        return collect(File::files($iconDirectory))
-            ->filter(fn ($file): bool => $file->getExtension() === 'svg')
-            ->map(fn ($file): string => Str::lower((string) $file->getFilenameWithoutExtension()))
-            ->unique()
-            ->sort()
-            ->values();
+        return Cache::remember('admin.categories.lucide_icons', now()->addHours(12), function () use ($iconDirectory) {
+            return collect(File::files($iconDirectory))
+                ->filter(fn ($file): bool => $file->getExtension() === 'svg')
+                ->map(fn ($file): string => Str::lower((string) $file->getFilenameWithoutExtension()))
+                ->unique()
+                ->sort()
+                ->values();
+        });
+    }
+
+    /**
+     * Clear category-related cache keys.
+     */
+    private function clearCategoryCaches(): void
+    {
+        foreach ([
+            'admin.categories.icon_options',
+            'admin.categories.total_count',
+            'catalog.home.categories',
+            'catalog.products.categories',
+            'admin.products.categories',
+        ] as $cacheKey) {
+            Cache::forget($cacheKey);
+        }
     }
 }

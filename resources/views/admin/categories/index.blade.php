@@ -20,52 +20,28 @@
         $defaultIcon = (string) $iconLookup->get('box', (string) $iconLookup->first() ?: 'box');
     @endphp
 
-    <div class="space-y-6">
-        @include('admin.partials.hero', [
-            'badge' => 'Category Management',
-            'title' => 'Manajemen Kategori',
-            'subtitle' => 'Buat, ubah, dan kelola urutan kategori produk.',
-        ])
+    @include('admin.partials.hero', [
+        'badge' => 'Category Management',
+        'title' => 'Manajemen Kategori',
+        'subtitle' => 'Lihat, filter, dan kelola kategori produk.',
+    ])
 
-        <x-admin.module>
-            <h2 class="text-base font-semibold text-slate-900">Buat Kategori</h2>
-            <form method="POST" action="{{ route('admin.categories.store') }}" class="mt-4 grid gap-4 sm:grid-cols-2">
-                @csrf
-                <div>
-                    <label class="mb-1 block text-xs font-semibold text-slate-700">Nama</label>
-                    <input name="name" class="w-full rounded-xl border border-slate-300 px-3 py-2 text-sm" value="{{ old('name') }}" required>
+    <div class="card border-0 shadow mb-4">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <h2 class="fs-5 fw-bold mb-0">Daftar Kategori</h2>
+            <a href="{{ route('admin.categories.create') }}" class="btn btn-sm btn-primary">
+                Tambah Kategori
+            </a>
+        </div>
+        <div class="card-body border-bottom">
+            <form method="GET" class="row g-3">
+                <div class="col-md-4">
+                    <label class="form-label">Cari</label>
+                    <input type="text" name="q" value="{{ $query }}" class="form-control" placeholder="Nama kategori atau ikon">
                 </div>
-                <div class="sm:col-span-2">
-                    @include('admin.categories.partials.icon-picker', [
-                        'fieldId' => 'create-category-icon',
-                        'inputName' => 'icon',
-                        'currentIcon' => old('icon', $defaultIcon),
-                        'lucideIcons' => $lucideIcons,
-                    ])
-                </div>
-                <div>
-                    <label class="mb-1 block text-xs font-semibold text-slate-700">Urutan Nomor</label>
-                    <input type="number" min="0" step="1" name="order_number" class="w-full rounded-xl border border-slate-300 px-3 py-2 text-sm" value="{{ old('order_number', 0) }}" required>
-                </div>
-                <div class="sm:col-span-2">
-                    <button type="submit" class="rounded-xl bg-emerald-700 px-4 py-2 text-sm font-semibold text-white hover:bg-emerald-600">Buat Kategori</button>
-                </div>
-            </form>
-        </x-admin.module>
-
-        <x-admin.module variant="table">
-            <x-slot:header>
-                <h2 class="text-base font-semibold text-slate-900">Daftar Kategori</h2>
-            </x-slot:header>
-
-            <form method="GET" class="grid gap-3 border-b border-slate-200 bg-white p-4 sm:grid-cols-4 sm:p-6">
-                <div class="sm:col-span-2">
-                    <label class="mb-1 block text-xs font-semibold text-slate-700">Cari</label>
-                    <input type="text" name="q" value="{{ $query }}" class="w-full rounded-xl border border-slate-300 px-3 py-2 text-sm" placeholder="Cari nama kategori atau ikon...">
-                </div>
-                <div>
-                    <label class="mb-1 block text-xs font-semibold text-slate-700">Ikon</label>
-                    <select name="icon" class="w-full rounded-xl border border-slate-300 px-3 py-2 text-sm">
+                <div class="col-md-3">
+                    <label class="form-label">Ikon</label>
+                    <select name="icon" class="form-select">
                         <option value="">Semua Ikon</option>
                         @foreach($iconOptions as $icon)
                             @php
@@ -75,82 +51,82 @@
                         @endforeach
                     </select>
                 </div>
-                <div class="flex items-end gap-2">
-                    <input type="hidden" name="page" value="1">
-                    <button type="submit" class="rounded-lg bg-slate-900 px-3 py-2 text-sm font-semibold text-white hover:bg-slate-800">Terapkan Filter</button>
-                </div>
-                <div>
-                    <label class="mb-1 block text-xs font-semibold text-slate-700">Rows</label>
-                    <select name="pageSize" onchange="this.form.submit()" class="w-full rounded-xl border border-slate-300 px-3 py-2 text-sm">
+                <div class="col-md-2">
+                    <label class="form-label">Rows</label>
+                    <select name="pageSize" class="form-select">
                         @foreach([5,10,20,50,100] as $size)
                             <option value="{{ $size }}" @selected($pageSize === $size)>{{ $size }}</option>
                         @endforeach
                     </select>
                 </div>
-            </form>
-
-            <div class="overflow-x-auto">
-                <table class="min-w-full">
-                    <thead>
-                        <tr class="bg-emerald-700 text-white">
-                            <th class="px-3 py-2 text-left text-xs font-semibold">No</th>
-                            <th class="px-3 py-2 text-left text-xs font-semibold">Nama</th>
-                            <th class="px-3 py-2 text-left text-xs font-semibold">Urutan</th>
-                            <th class="px-3 py-2 text-left text-xs font-semibold">Ikon</th>
-                            <th class="px-3 py-2 text-left text-xs font-semibold">Produk</th>
-                            <th class="px-3 py-2 text-center text-xs font-semibold">Aksi</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @forelse($categories as $index => $category)
-                            <tr class="border-t border-slate-200 bg-white">
-                                <td class="px-3 py-2 text-sm text-slate-600">{{ ($categories->currentPage() - 1) * $categories->perPage() + $index + 1 }}</td>
-                                <td class="px-3 py-2 text-sm font-medium text-slate-900">{{ $category->name }}</td>
-                                <td class="px-3 py-2 text-sm text-slate-700">{{ $category->order_number }}</td>
-                                <td class="px-3 py-2 text-sm text-slate-700">
-                                    @php
-                                        $resolvedIcon = (string) $iconLookup->get($normalizeIcon((string) $category->icon), $defaultIcon);
-                                    @endphp
-                                    <div class="inline-flex items-center gap-2 rounded-full bg-slate-100 px-2.5 py-1">
-                                        @include('partials.category-icon', [
-                                            'icon' => $category->icon,
-                                            'iconClass' => 'h-4 w-4 text-emerald-700',
-                                        ])
-                                        <span>{{ $resolvedIcon }}</span>
-                                    </div>
-                                </td>
-                                <td class="px-3 py-2 text-sm text-slate-700">{{ $category->products_count }}</td>
-                                <td class="px-3 py-2">
-                                    <div class="flex items-center justify-center gap-2">
-                                        <a href="{{ route('admin.categories.edit', $category->id) }}" class="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-slate-300 text-slate-700 hover:bg-slate-100" aria-label="Ubah kategori {{ $category->name }}">
-                                            <x-lucide-pencil class="h-4 w-4" />
-                                        </a>
-                                        <form method="POST" action="{{ route('admin.categories.destroy', $category->id) }}" onsubmit="return confirm('Hapus kategori ini?')">
-                                            @csrf
-                                            @method('DELETE')
-                                            <button type="submit" class="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-red-300 text-red-700 hover:bg-red-50" aria-label="Delete category {{ $category->name }}">
-                                                <x-lucide-trash-2 class="h-4 w-4" />
-                                            </button>
-                                        </form>
-                                    </div>
-                                </td>
-                            </tr>
-                        @empty
-                            <tr>
-                                <td colspan="6" class="px-4 py-6 text-center text-sm text-slate-600">No categories found.</td>
-                            </tr>
-                        @endforelse
-                    </tbody>
-                </table>
-            </div>
-
-            <x-slot:footer>
-                <div class="w-full">
-                    {{ $categories->onEachSide(1)->links('vendor.pagination.custom') }}
+                <div class="col-md-3 d-flex align-items-end gap-2">
+                    <input type="hidden" name="page" value="1">
+                    <button type="submit" class="btn btn-primary">Terapkan</button>
+                    <a href="{{ route('admin.categories.index') }}" class="btn btn-outline-secondary">Reset</a>
                 </div>
-            </x-slot:footer>
-        </x-admin.module>
+            </form>
+        </div>
+        <div class="table-responsive">
+            <table class="table table-centered table-nowrap mb-0 rounded">
+                <thead class="thead-light">
+                    <tr>
+                        <th>No</th>
+                        <th>Nama</th>
+                        <th>Urutan</th>
+                        <th>Ikon</th>
+                        <th>Produk</th>
+                        <th class="text-center">Aksi</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @forelse($categories as $index => $category)
+                        <tr>
+                            <td>{{ ($categories->currentPage() - 1) * $categories->perPage() + $index + 1 }}</td>
+                            <td>{{ $category->name }}</td>
+                            <td>{{ $category->order_number }}</td>
+                            <td>
+                                @php
+                                    $resolvedIcon = (string) $iconLookup->get($normalizeIcon((string) $category->icon), $defaultIcon);
+                                    $resolvedIconUrl = route('admin.lucide-icons.svg', ['name' => $resolvedIcon]);
+                                @endphp
+                                <span class="d-inline-flex align-items-center gap-2 px-2 py-1 rounded-pill border bg-light text-dark">
+                                    <img
+                                        src="{{ $resolvedIconUrl }}"
+                                        alt="{{ $resolvedIcon }}"
+                                        width="16"
+                                        height="16"
+                                        class="flex-shrink-0"
+                                        loading="lazy"
+                                    >
+                                    <span class="small text-lowercase">{{ $resolvedIcon }}</span>
+                                </span>
+                            </td>
+                            <td>{{ $category->products_count }}</td>
+                            <td class="text-center">
+                                <a href="{{ route('admin.categories.edit', $category->id) }}" class="btn btn-sm btn-outline-secondary">
+                                    <i class="bi bi-pencil"></i>
+                                </a>
+                                <form method="POST" action="{{ route('admin.categories.destroy', $category->id) }}" class="d-inline-block" onsubmit="return confirm('Hapus kategori ini?')">
+                                    @csrf
+                                    @method('DELETE')
+                                    <button type="submit" class="btn btn-sm btn-outline-danger">
+                                        <i class="bi bi-trash"></i>
+                                    </button>
+                                </form>
+                            </td>
+                        </tr>
+                    @empty
+                        <tr>
+                            <td colspan="6" class="text-center py-4">Tidak ada kategori ditemukan.</td>
+                        </tr>
+                    @endforelse
+                </tbody>
+            </table>
+        </div>
+        <div class="card-footer px-3 border-0 d-flex flex-column flex-lg-row justify-content-between align-items-center">
+            <small class="fw-normal small mb-3 mb-lg-0">Menampilkan {{ $filteredCount }} dari {{ $totalCount }} kategori</small>
+            {{ $categories->onEachSide(1)->links('pagination::bootstrap-5') }}
+        </div>
     </div>
 
-    @include('admin.categories.partials.icon-modal', ['lucideIcons' => $lucideIcons])
 @endsection

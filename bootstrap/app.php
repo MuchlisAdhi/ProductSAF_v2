@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Middleware\EnsureApiAuthenticated;
+use App\Http\Middleware\TrackPublicVisit;
 use App\Http\Middleware\EnsureRole;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
@@ -20,6 +21,7 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->alias([
             'api.auth' => EnsureApiAuthenticated::class,
             'role' => EnsureRole::class,
+            'track.public' => TrackPublicVisit::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {

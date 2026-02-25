@@ -1,129 +1,186 @@
 @extends('layouts.admin')
 
 @section('content')
-    <div class="space-y-6">
-        @include('admin.partials.hero', [
-            'badge' => 'User Management',
-            'title' => 'Manajemen Pengguna',
-            'subtitle' => 'Kelola akun admin dan role akses sistem.',
-        ])
+    @include('admin.partials.hero', [
+        'badge' => 'User Management',
+        'title' => 'Daftar Pengguna',
+        'subtitle' => 'Kelola akun admin melalui daftar pengguna.',
+    ])
 
-        <x-admin.module>
-            <h2 class="text-base font-semibold text-slate-900">Tambah Pengguna</h2>
-            <form method="POST" action="{{ route('admin.users.store') }}" class="mt-4 grid gap-4 sm:grid-cols-2">
-                @csrf
-                <div>
-                    <label class="mb-1 block text-xs font-semibold text-slate-700">Nama</label>
-                    <input name="name" value="{{ old('name') }}" class="w-full rounded-xl border border-slate-300 px-3 py-2 text-sm" required>
+    <div class="card border-0 shadow mb-4">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <h2 class="fs-5 fw-bold mb-0">Daftar Pengguna</h2>
+            <button type="button" class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#createUserModal">
+                Tambah Pengguna
+            </button>
+        </div>
+        <div class="card-body border-bottom">
+            <form method="GET" class="row g-3">
+                <div class="col-md-4">
+                    <label class="form-label">Cari</label>
+                    <input type="text" name="q" value="{{ $query }}" class="form-control" placeholder="Cari nama atau email">
                 </div>
-                <div>
-                    <label class="mb-1 block text-xs font-semibold text-slate-700">Email</label>
-                    <input type="email" name="email" value="{{ old('email') }}" class="w-full rounded-xl border border-slate-300 px-3 py-2 text-sm" required>
-                </div>
-                <div>
-                    <label class="mb-1 block text-xs font-semibold text-slate-700">Role</label>
-                    <select name="role" class="w-full rounded-xl border border-slate-300 px-3 py-2 text-sm">
-                        @foreach($roles as $role)
-                            <option value="{{ $role }}" @selected(old('role', 'USER') === $role)>{{ $role }}</option>
-                        @endforeach
-                    </select>
-                </div>
-                <div>
-                    <label class="mb-1 block text-xs font-semibold text-slate-700">Password</label>
-                    <input type="password" name="password" class="w-full rounded-xl border border-slate-300 px-3 py-2 text-sm" required>
-                </div>
-                <div class="sm:col-span-2">
-                    <button type="submit" class="rounded-xl bg-emerald-700 px-4 py-2 text-sm font-semibold text-white hover:bg-emerald-600">Tambah Pengguna</button>
-                </div>
-            </form>
-        </x-admin.module>
-
-        <x-admin.module variant="table">
-            <x-slot:header>
-                <h2 class="text-base font-semibold text-slate-900">Daftar Pengguna</h2>
-            </x-slot:header>
-
-            <form method="GET" class="grid gap-3 border-b border-slate-200 bg-white p-4 sm:grid-cols-4 sm:p-6">
-                <div class="sm:col-span-2">
-                    <label class="mb-1 block text-xs font-semibold text-slate-700">Cari</label>
-                    <input type="text" name="q" value="{{ $query }}" class="w-full rounded-xl border border-slate-300 px-3 py-2 text-sm" placeholder="Cari nama atau email...">
-                </div>
-                <div>
-                    <label class="mb-1 block text-xs font-semibold text-slate-700">Role</label>
-                    <select name="role" class="w-full rounded-xl border border-slate-300 px-3 py-2 text-sm">
+                <div class="col-md-3">
+                    <label class="form-label">Role</label>
+                    <select name="role" class="form-select">
                         <option value="">Semua Roles</option>
                         @foreach($roles as $role)
                             <option value="{{ $role }}" @selected($roleFilter === $role)>{{ $role }}</option>
                         @endforeach
                     </select>
                 </div>
-                <div class="flex items-end">
-                    <button type="submit" class="rounded-lg bg-slate-900 px-3 py-2 text-sm font-semibold text-white hover:bg-slate-800">Terapkan Filter</button>
-                </div>
-                <div>
-                    <label class="mb-1 block text-xs font-semibold text-slate-700">Jumlah Baris</label>
-                    <select name="pageSize" onchange="this.form.submit()" class="w-full rounded-xl border border-slate-300 px-3 py-2 text-sm">
+                <div class="col-md-2">
+                    <label class="form-label">Rows</label>
+                    <select name="pageSize" class="form-select">
                         @foreach([5,10,20,50,100] as $size)
                             <option value="{{ $size }}" @selected($pageSize === $size)>{{ $size }}</option>
                         @endforeach
                     </select>
                 </div>
-            </form>
-
-            <div class="overflow-x-auto">
-                <table class="min-w-full">
-                    <thead>
-                        <tr class="bg-emerald-700 text-white">
-                            <th class="px-3 py-2 text-left text-xs font-semibold">No</th>
-                            <th class="px-3 py-2 text-left text-xs font-semibold">Nama</th>
-                            <th class="px-3 py-2 text-left text-xs font-semibold">Email</th>
-                            <th class="px-3 py-2 text-left text-xs font-semibold">Role</th>
-                            <th class="px-3 py-2 text-left text-xs font-semibold">Created</th>
-                            <th class="px-3 py-2 text-center text-xs font-semibold">Aksi</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @forelse($users as $index => $user)
-                            <tr class="border-t border-slate-200 bg-white">
-                                <td class="px-3 py-2 text-sm text-slate-600">{{ ($users->currentPage() - 1) * $users->perPage() + $index + 1 }}</td>
-                                <td class="px-3 py-2 text-sm text-slate-900">
-                                    {{ $user->name }}
-                                    @if($user->id === $currentUserId)
-                                        <span class="ml-2 rounded-full bg-amber-100 px-2 py-0.5 text-[11px] font-semibold text-slate-700">Anda</span>
-                                    @endif
-                                </td>
-                                <td class="px-3 py-2 text-sm text-slate-700">{{ $user->email }}</td>
-                                <td class="px-3 py-2 text-sm text-slate-700">{{ $user->role instanceof \App\Enums\Role ? $user->role->value : $user->role }}</td>
-                                <td class="px-3 py-2 text-sm text-slate-600">{{ optional($user->created_at)->format('d/m/Y') }}</td>
-                                <td class="px-3 py-2">
-                                    <div class="flex items-center justify-center gap-2">
-                                        <a href="{{ route('admin.users.edit', $user->id) }}" class="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-slate-300 text-slate-700 hover:bg-slate-100" aria-label="Edit user {{ $user->name }}">
-                                            <x-lucide-pencil class="h-4 w-4" />
-                                        </a>
-                                        <form method="POST" action="{{ route('admin.users.destroy', $user->id) }}" onsubmit="return confirm('Hapus pengguna ini?')">
-                                            @csrf
-                                            @method('DELETE')
-                                            <button type="submit" @disabled($user->id === $currentUserId) class="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-red-300 text-red-700 hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-50" aria-label="Delete user {{ $user->name }}">
-                                                <x-lucide-trash-2 class="h-4 w-4" />
-                                            </button>
-                                        </form>
-                                    </div>
-                                </td>
-                            </tr>
-                        @empty
-                            <tr>
-                                <td colspan="6" class="px-4 py-6 text-center text-sm text-slate-600">Tidak ada pengguna yang ditemukan.</td>
-                            </tr>
-                        @endforelse
-                    </tbody>
-                </table>
-            </div>
-
-            <x-slot:footer>
-                <div class="w-full">
-                    {{ $users->onEachSide(1)->links('vendor.pagination.custom') }}
+                <div class="col-md-3 d-flex align-items-end gap-2">
+                    <button type="submit" class="btn btn-primary">Terapkan</button>
+                    <a href="{{ route('admin.users.index') }}" class="btn btn-outline-secondary">Reset</a>
                 </div>
-            </x-slot:footer>
-        </x-admin.module>
+            </form>
+        </div>
+        <div class="table-responsive">
+            <table class="table table-centered table-nowrap mb-0 rounded">
+                <thead class="thead-light">
+                    <tr>
+                        <th>No</th>
+                        <th>Nama</th>
+                        <th>Email</th>
+                        <th>Role</th>
+                        <th>Dibuat</th>
+                        <th class="text-center">Aksi</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @forelse($users as $index => $user)
+                        @php
+                            $userRole = $user->role instanceof \App\Enums\Role ? $user->role->value : $user->role;
+                        @endphp
+                        <tr>
+                            <td>{{ ($users->currentPage() - 1) * $users->perPage() + $index + 1 }}</td>
+                            <td>
+                                {{ $user->name }}
+                                @if($user->id === $currentUserId)
+                                    <span class="badge bg-warning ms-2">Anda</span>
+                                @endif
+                            </td>
+                            <td>{{ $user->email }}</td>
+                            <td>{{ $userRole }}</td>
+                            <td>{{ optional($user->created_at)->format('d/m/Y') }}</td>
+                            <td class="text-center">
+                                <button type="button" class="btn btn-sm btn-outline-secondary" data-bs-toggle="modal" data-bs-target="#editUserModal-{{ $user->id }}">
+                                    <i class="bi bi-pencil"></i>
+                                </button>
+                                <form method="POST" action="{{ route('admin.users.destroy', $user->id) }}" class="d-inline-block" onsubmit="return confirm('Hapus pengguna ini?')">
+                                    @csrf
+                                    @method('DELETE')
+                                    <button type="submit" @disabled($user->id === $currentUserId) class="btn btn-sm btn-outline-danger">
+                                        <i class="bi bi-trash"></i>
+                                    </button>
+                                </form>
+                            </td>
+                        </tr>
+                    @empty
+                        <tr>
+                            <td colspan="6" class="text-center py-4">Tidak ada pengguna yang ditemukan.</td>
+                        </tr>
+                    @endforelse
+                </tbody>
+            </table>
+        </div>
+        <div class="card-footer px-3 border-0 d-flex flex-column flex-lg-row justify-content-between align-items-center">
+            <small class="fw-normal small mb-3 mb-lg-0">Menampilkan {{ $filteredCount }} dari {{ $totalCount }} pengguna</small>
+            {{ $users->onEachSide(1)->links('pagination::bootstrap-5') }}
+        </div>
     </div>
+
+    <div class="modal fade" id="createUserModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <form method="POST" action="{{ route('admin.users.store') }}">
+                    @csrf
+                    <div class="modal-header">
+                        <h5 class="modal-title">Tambah Pengguna</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Tutup"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="mb-3">
+                            <label class="form-label">Nama</label>
+                            <input name="name" value="{{ old('name') }}" class="form-control" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Email</label>
+                            <input type="email" name="email" value="{{ old('email') }}" class="form-control" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Role</label>
+                            <select name="role" class="form-select">
+                                @foreach($roles as $role)
+                                    <option value="{{ $role }}" @selected(old('role', 'USER') === $role)>{{ $role }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+                        <div>
+                            <label class="form-label">Password</label>
+                            <input type="password" name="password" class="form-control" required>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Batal</button>
+                        <button type="submit" class="btn btn-primary">Simpan</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    @foreach($users as $user)
+        @php
+            $editUserRole = $user->role instanceof \App\Enums\Role ? $user->role->value : $user->role;
+        @endphp
+        <div class="modal fade" id="editUserModal-{{ $user->id }}" tabindex="-1" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content">
+                    <form method="POST" action="{{ route('admin.users.update', $user->id) }}">
+                        @csrf
+                        @method('PUT')
+                        <div class="modal-header">
+                            <h5 class="modal-title">Edit Pengguna</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Tutup"></button>
+                        </div>
+                        <div class="modal-body">
+                            <div class="mb-3">
+                                <label class="form-label">Nama</label>
+                                <input name="name" value="{{ $user->name }}" class="form-control" required>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Email</label>
+                                <input type="email" name="email" value="{{ $user->email }}" class="form-control" required>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Role</label>
+                                <select name="role" class="form-select">
+                                    @foreach($roles as $role)
+                                        <option value="{{ $role }}" @selected($editUserRole === $role)>{{ $role }}</option>
+                                    @endforeach
+                                </select>
+                            </div>
+                            <div>
+                                <label class="form-label">Password Baru (opsional)</label>
+                                <input type="password" name="password" class="form-control" placeholder="Kosongkan jika tidak diganti">
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Batal</button>
+                            <button type="submit" class="btn btn-primary">Simpan Perubahan</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    @endforeach
 @endsection

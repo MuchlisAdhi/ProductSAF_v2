@@ -8,15 +8,18 @@ use App\Http\Controllers\Api\UserController;
 use App\Http\Controllers\Web\Admin\CategoryAdminController;
 use App\Http\Controllers\Web\Admin\DashboardController;
 use App\Http\Controllers\Web\Admin\ProductAdminController;
+use App\Http\Controllers\Web\Admin\TrackerAdminController;
 use App\Http\Controllers\Web\Admin\UserAdminController;
 use App\Http\Controllers\Web\AuthPageController;
 use App\Http\Controllers\Web\CatalogController;
 use Illuminate\Support\Facades\Route;
 
-Route::get('/', [CatalogController::class, 'home'])->name('home');
-Route::get('/products', [CatalogController::class, 'products'])->name('products.index');
-Route::get('/products/{id}', [CatalogController::class, 'show'])->name('products.show');
-Route::get('/categories/{id}', [CatalogController::class, 'byCategory'])->name('categories.show');
+Route::middleware('track.public')->group(function (): void {
+    Route::get('/', [CatalogController::class, 'home'])->name('home');
+    Route::get('/products', [CatalogController::class, 'products'])->name('products.index');
+    Route::get('/products/{id}', [CatalogController::class, 'show'])->name('products.show');
+    Route::get('/categories/{id}', [CatalogController::class, 'byCategory'])->name('categories.show');
+});
 
 Route::get('/login', [AuthPageController::class, 'loginForm'])->name('login');
 Route::post('/login', [AuthPageController::class, 'login'])->name('login.submit');
@@ -71,10 +74,17 @@ Route::prefix('admin')
             ->name('lucide-icons.svg');
 
         Route::get('/categories', [CategoryAdminController::class, 'index'])->name('categories.index');
+        Route::get('/categories/new', [CategoryAdminController::class, 'create'])->name('categories.create');
         Route::post('/categories', [CategoryAdminController::class, 'store'])->name('categories.store');
         Route::get('/categories/{id}/edit', [CategoryAdminController::class, 'edit'])->name('categories.edit');
         Route::put('/categories/{id}', [CategoryAdminController::class, 'update'])->name('categories.update');
         Route::delete('/categories/{id}', [CategoryAdminController::class, 'destroy'])->name('categories.destroy');
+
+        Route::prefix('/tracker')->name('tracker.')->group(function (): void {
+            Route::get('/summary', [TrackerAdminController::class, 'summary'])->name('summary');
+            Route::get('/visits', [TrackerAdminController::class, 'visits'])->name('visits');
+            Route::get('/users', [TrackerAdminController::class, 'guests'])->name('users');
+        });
     });
 
 Route::prefix('admin')

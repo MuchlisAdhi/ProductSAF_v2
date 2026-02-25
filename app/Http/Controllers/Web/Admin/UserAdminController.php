@@ -7,6 +7,7 @@ use App\Http\Controllers\Controller;
 use App\Models\User;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Validation\Rules\Enum;
 use Illuminate\Validation\Rules\Unique;
@@ -24,7 +25,7 @@ class UserAdminController extends Controller
         $roleFilter = trim((string) $request->query('role', ''));
         $pageSize = $this->resolvePageSize((int) $request->query('pageSize', 10), [5, 10, 20, 50, 100], 10);
 
-        $builder = User::query();
+        $builder = User::query()->select(['id', 'name', 'email', 'role', 'created_at']);
         if ($query !== '') {
             $builder->where(function ($q) use ($query): void {
                 $q->where('name', 'like', "%{$query}%")
@@ -44,7 +45,11 @@ class UserAdminController extends Controller
             'query' => $query,
             'roleFilter' => $roleFilter,
             'pageSize' => $pageSize,
-            'totalCount' => User::query()->count(),
+            'totalCount' => Cache::remember(
+                'admin.users.total_count',
+                now()->addMinutes(10),
+                fn () => User::query()->count()
+            ),
             'filteredCount' => $filteredCount,
             'roles' => Role::values(),
             'currentUserId' => (string) Auth::id(),
@@ -70,6 +75,7 @@ class UserAdminController extends Controller
             'password' => $payload['password'],
             'role' => $payload['role'],
         ]);
+        Cache::forget('admin.users.total_count');
 
         return back()->with('success', 'User created.');
     }
@@ -109,6 +115,7 @@ class UserAdminController extends Controller
             $targetUser->password = $payload['password'];
         }
         $targetUser->save();
+        Cache::forget('admin.users.total_count');
 
         return redirect()->route('admin.users.index')->with('success', 'User updated.');
     }
@@ -123,6 +130,7 @@ class UserAdminController extends Controller
         }
 
         User::query()->findOrFail($id)->delete();
+        Cache::forget('admin.users.total_count');
 
         return back()->with('success', 'User deleted.');
     }

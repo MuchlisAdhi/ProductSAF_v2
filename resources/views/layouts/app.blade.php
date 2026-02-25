@@ -6,6 +6,9 @@
     <title>{{ $title ?? 'Sidoagung Farm Katalog Produk' }}</title>
     <link rel="icon" href="{{ asset('images/logo/saf-logo-merah.ico') }}" type="image/x-icon">
     <link rel="shortcut icon" href="{{ asset('images/logo/saf-logo-merah.ico') }}" type="image/x-icon">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Anton&family=Kaushan+Script&display=swap" rel="stylesheet">
     @stack('head')
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
@@ -24,8 +27,8 @@
                     class="h-11 w-11 shrink-0 object-contain sm:h-14 sm:w-12"
                 >
                 <div class="min-w-0">
-                    <div class="text-[1.45rem] leading-[1.04] tracking-[0.022em] text-white sm:text-[2rem]" style="font-family: Impact, Haettenschweiler, 'Arial Narrow Bold', sans-serif;">PT. Sidoagung Farm</div>
-                    <div class="mt-0.5 text-[0.98rem] leading-[1.06] tracking-[0.014em] text-white/90 sm:text-[1.2rem]" style="font-family: 'Brush Script MT', 'Segoe Script', cursive;">Menjadi Tuan Rumah Di Negeri Sendiri</div>
+                    <div class="brand-title text-[1.45rem] leading-[1.04] tracking-[0.022em] text-white sm:text-[2rem]">PT. Sidoagung Farm</div>
+                    <div class="brand-tagline mt-0.5 text-[0.98rem] leading-[1.06] tracking-[0.014em] text-white/90 sm:text-[1.2rem]">Menjadi Tuan Rumah Di Negeri Sendiri</div>
                 </div>
             </a>
 

@@ -13,7 +13,7 @@
         default => $value,
     };
 
-    $tone = 'slate';
+    $tone = 'gray';
     if (in_array($normalized, ['merah', 'red'], true)) {
         $tone = 'red';
     } elseif (in_array($normalized, ['biru', 'blue'], true)) {
@@ -27,35 +27,25 @@
     }
 
     $isOutline = \Illuminate\Support\Str::lower((string) $variant) === 'outline';
-    $outlineStyle = '';
-
-    if ($isOutline) {
-        $outlineStyle = match ($tone) {
-            'red' => 'border-color:#ef4444;color:#dc2626;background-color:rgba(255,255,255,0.92);',
-            'blue' => 'border-color:#3b82f6;color:#1d4ed8;background-color:rgba(255,255,255,0.92);',
-            'emerald' => 'border-color:#10b981;color:#047857;background-color:rgba(255,255,255,0.92);',
-            'orange' => 'border-color:#f97316;color:#c2410c;background-color:rgba(255,255,255,0.92);',
-            'pink' => 'border-color:#ec4899;color:#be185d;background-color:rgba(255,255,255,0.92);',
-            default => 'border-color:#64748b;color:#334155;background-color:rgba(255,255,255,0.92);',
-        };
-    }
-
-    $badgeClass = match ($tone) {
-        'red' => $isOutline ? 'border bg-white' : 'bg-red-100 text-red-700 ring-red-200',
-        'blue' => $isOutline ? 'border bg-white' : 'bg-blue-100 text-blue-700 ring-blue-200',
-        'emerald' => $isOutline ? 'border bg-white' : 'bg-emerald-100 text-emerald-700 ring-emerald-200',
-        'orange' => $isOutline ? 'border bg-white' : 'bg-orange-100 text-orange-700 ring-orange-200',
-        'pink' => $isOutline ? 'border bg-white' : 'bg-pink-100 text-pink-700 ring-pink-200',
-        default => $isOutline ? 'border bg-white' : 'bg-slate-100 text-slate-700 ring-slate-200',
+    [$background, $textColor, $borderColor] = match ($tone) {
+        'red' => ['#fee2e2', '#b91c1c', '#ef4444'],
+        'blue' => ['#dbeafe', '#1d4ed8', '#3b82f6'],
+        'emerald' => ['#d1fae5', '#047857', '#10b981'],
+        'orange' => ['#ffedd5', '#c2410c', '#f97316'],
+        'pink' => ['#fce7f3', '#be185d', '#ec4899'],
+        default => ['#e5e7eb', '#374151', '#9ca3af'],
     };
 
-    $ringClass = $isOutline ? '' : 'ring-1';
+    $style = $isOutline
+        ? "border:1px solid {$borderColor};background:#fff;color:{$textColor};"
+        : "background:{$background};color:{$textColor};border:1px solid rgba(0,0,0,.05);";
+
     $resolvedClass = trim((string) $class);
 @endphp
 
 <span
-    {{ $attributes->class("inline-flex rounded-full px-2.5 py-1 text-[11px] font-semibold {$ringClass} {$badgeClass} {$resolvedClass}") }}
-    @if($outlineStyle !== '') style="{{ $outlineStyle }}" @endif
+    {{ $attributes->class("badge rounded-pill fw-semibold {$resolvedClass}") }}
+    style="{{ $style }}"
 >
     {{ $displayValue !== '' ? $displayValue : '-' }}
 </span>

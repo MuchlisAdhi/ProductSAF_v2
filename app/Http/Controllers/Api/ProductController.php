@@ -253,6 +253,7 @@ class ProductController extends Controller
                 'id' => $product->image->id,
                 'originalFileName' => $product->image->original_file_name,
                 'systemPath' => $product->image->system_path,
+                'thumbnailPath' => $product->image->thumbnail_path,
                 'mimeType' => $product->image->mime_type,
                 'size' => $product->image->size,
             ] : null,

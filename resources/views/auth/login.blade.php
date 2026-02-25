@@ -1,37 +1,52 @@
-@extends('layouts.app')
+@extends('layouts.auth')
 
 @section('content')
-    <div class="mx-auto max-w-md rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-        <h1 class="text-xl font-semibold text-slate-900">Masuk ke Akun Anda</h1>
-        <!-- <p class="mt-1 text-sm text-slate-600">Use seeded account: <span class="font-semibold">admin@sidoagung.com</span> / <span class="font-semibold">password123</span></p> -->
+    <div class="text-center text-md-center mb-4 mt-md-0">
+        <img src="{{ asset('images/logo/saf-logo.png') }}" alt="Sidoagung Farm" class="mb-3" style="height: 68px; width: auto;">
+        <h1 class="mb-0 h3">Admin Login</h1>
+        <p class="text-muted mb-0">Masuk ke dashboard Admin</p>
+    </div>
 
-        <form method="POST" action="{{ route('login.submit') }}" class="mt-5 space-y-4">
-            @csrf
-            <input type="hidden" name="next" value="{{ $nextPath }}">
-            <div>
-                <label class="mb-1 block text-xs font-semibold text-slate-700">Email</label>
+    <form method="POST" action="{{ route('login.submit') }}" class="mt-4">
+        @csrf
+        <input type="hidden" name="next" value="{{ $nextPath }}">
+
+        <div class="form-group mb-3">
+            <label for="email" class="form-label">Email</label>
+            <div class="input-group">
+                <span class="input-group-text"><i class="bi bi-envelope"></i></span>
                 <input
+                    id="email"
                     type="email"
                     name="email"
                     value="{{ old('email') }}"
-                    class="w-full rounded-xl border border-slate-300 px-3 py-2 text-sm focus:border-emerald-600 focus:outline-none focus:ring-2 focus:ring-emerald-200"
+                    class="form-control"
+                    placeholder="admin@sidoagung.com"
                     required
-                />
+                    autofocus
+                >
             </div>
+        </div>
 
-            <div>
-                <label class="mb-1 block text-xs font-semibold text-slate-700">Password</label>
+        <div class="form-group mb-4">
+            <label for="password" class="form-label">Password</label>
+            <div class="input-group">
+                <span class="input-group-text"><i class="bi bi-lock"></i></span>
                 <input
+                    id="password"
                     type="password"
                     name="password"
-                    class="w-full rounded-xl border border-slate-300 px-3 py-2 text-sm focus:border-emerald-600 focus:outline-none focus:ring-2 focus:ring-emerald-200"
+                    class="form-control"
+                    placeholder="********"
                     required
-                />
+                >
             </div>
+        </div>
 
-            <button type="submit" class="w-full rounded-xl bg-emerald-700 px-4 py-2 text-sm font-semibold text-white hover:bg-emerald-600">
-                Sign In
+        <div class="d-grid">
+            <button type="submit" class="btn btn-primary">
+                Sign in
             </button>
-        </form>
-    </div>
+        </div>
+    </form>
 @endsection

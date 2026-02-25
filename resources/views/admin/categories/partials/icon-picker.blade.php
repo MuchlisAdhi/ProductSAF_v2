@@ -27,41 +27,43 @@
     $currentComponent = $resolvedIcon !== '' ? 'lucide-'.$resolvedIcon : null;
 @endphp
 
-<div class="space-y-2">
-    <label class="mb-1 block text-xs font-semibold text-slate-700">Ikon</label>
-    <div class="flex flex-wrap items-center gap-2">
+<div>
+    <label class="form-label">Ikon</label>
+    <div class="d-flex flex-wrap align-items-center gap-2">
         <button
             type="button"
             data-open-icon-picker
             data-target-input="{{ $fieldId }}"
-            class="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-100"
+            class="btn btn-outline-secondary"
         >
-            Pilih Lucide Ikon
+            Pilih Lucide Icon
         </button>
         <input
             id="{{ $fieldId }}"
             name="{{ $inputName }}"
             value="{{ $resolvedIcon }}"
-            class="w-full rounded-xl border border-slate-300 px-3 py-2 text-sm sm:max-w-lg"
+            class="form-control"
+            style="max-width: 420px;"
             readonly
             required
         >
     </div>
-    <div class="flex items-center gap-2 rounded-lg border border-slate-200 bg-slate-50 px-3 py-2">
+    <div class="d-flex align-items-center gap-2 p-2 mt-2 border rounded bg-light">
         <div
             data-icon-preview
             data-for-input="{{ $fieldId }}"
-            class="grid h-10 w-10 place-items-center overflow-hidden rounded-lg border border-slate-200 bg-white"
+            class="d-flex align-items-center justify-content-center border rounded bg-white"
+            style="width: 40px; height: 40px;"
         >
             @if($currentComponent)
-                <x-dynamic-component :component="$currentComponent" class="h-5 w-5 text-emerald-700" />
+                <x-dynamic-component :component="$currentComponent" class="text-success" style="width:18px;height:18px;" />
             @else
-                <span class="text-[11px] font-semibold text-slate-500">N/A</span>
+                <span class="small text-muted">N/A</span>
             @endif
         </div>
-        <p class="text-xs text-slate-600">
-            <span class="font-semibold text-slate-700" data-icon-label data-for-input="{{ $fieldId }}">{{ $currentLabel }}</span>
-            <span class="ml-1">Nama ikonLucide.</span>
+        <p class="small mb-0 text-muted">
+            <span class="fw-semibold text-dark" data-icon-label data-for-input="{{ $fieldId }}">{{ $currentLabel }}</span>
+            <span class="ms-1">Nama ikon Lucide.</span>
         </p>
     </div>
 </div>
