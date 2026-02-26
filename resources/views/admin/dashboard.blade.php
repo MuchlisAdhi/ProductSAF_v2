@@ -61,14 +61,14 @@
 
     @if(! $trackerReady)
         <div class="alert alert-warning">
-            Tabel tracker belum tersedia. Jalankan migrasi terlebih dahulu: <code>php artisan migrate</code>.
+            Tabel pelacak belum tersedia. Jalankan migrasi terlebih dahulu: <code>php artisan migrate</code>.
         </div>
     @else
         <div class="row">
             <div class="col-12 col-md-4 mb-4">
                 <div class="card border-0 shadow h-100">
                     <div class="card-body">
-                        <h2 class="fs-6 fw-normal text-muted mb-1">Total Visit</h2>
+                        <h2 class="fs-6 fw-normal text-muted mb-1">Total Kunjungan</h2>
                         <span class="fs-3 fw-bold">{{ number_format($trackerSummary['totalVisits']) }}</span>
                     </div>
                 </div>
@@ -76,7 +76,7 @@
             <div class="col-12 col-md-4 mb-4">
                 <div class="card border-0 shadow h-100">
                     <div class="card-body">
-                        <h2 class="fs-6 fw-normal text-muted mb-1">Guest Visit</h2>
+                        <h2 class="fs-6 fw-normal text-muted mb-1">Kunjungan Tamu</h2>
                         <span class="fs-3 fw-bold">{{ number_format($trackerSummary['guestVisits']) }}</span>
                     </div>
                 </div>
@@ -84,7 +84,7 @@
             <div class="col-12 col-md-4 mb-4">
                 <div class="card border-0 shadow h-100">
                     <div class="card-body">
-                        <h2 class="fs-6 fw-normal text-muted mb-1">Unique Visitor</h2>
+                        <h2 class="fs-6 fw-normal text-muted mb-1">Pengunjung Unik</h2>
                         <span class="fs-3 fw-bold">{{ number_format($trackerSummary['uniqueVisitors']) }}</span>
                     </div>
                 </div>
@@ -93,8 +93,8 @@
 
         <div class="card border-0 shadow mb-4">
             <div class="card-header d-flex justify-content-between align-items-center">
-                <h2 class="fs-5 fw-bold mb-0">Traffic Summary Chart</h2>
-                <a href="{{ route('admin.tracker.summary') }}" class="btn btn-sm btn-outline-primary">See all</a>
+                <h2 class="fs-5 fw-bold mb-0">Rangkuman Grafik Kunjungan</h2>
+                <a href="{{ route('admin.tracker.summary') }}" class="btn btn-sm btn-outline-primary">Lihat semua</a>
             </div>
             <div class="card-body">
                 <div style="height: 320px;">
@@ -106,25 +106,25 @@
 
         <div class="card border-0 shadow mb-4">
             <div class="card-header d-flex justify-content-between align-items-center">
-                <h2 class="fs-5 fw-bold mb-0">List Visit</h2>
-                <a href="{{ route('admin.tracker.visits') }}" class="btn btn-sm btn-outline-primary">See all</a>
+                <h2 class="fs-5 fw-bold mb-0">Daftar Kunjungan</h2>
+                <a href="{{ route('admin.tracker.visits') }}" class="btn btn-sm btn-outline-primary">Lihat semua</a>
             </div>
             <div class="table-responsive">
                 <table class="table table-centered table-hover table-nowrap mb-0 rounded">
                     <thead class="thead-light">
                         <tr>
                             <th>Waktu</th>
-                            <th>Path</th>
-                            <th>User</th>
+                            <th>Lokasi</th>
+                            <th>Pengguna</th>
                             <th>IP</th>
-                            <th>Method</th>
-                            <th>Agent</th>
+                            <th>Metode</th>
+                            <th>Peramban</th>
                         </tr>
                     </thead>
                     <tbody>
                         @forelse($recentVisits as $visit)
                             <tr>
-                                <td>{{ \Illuminate\Support\Carbon::parse($visit->visited_at)->format('d/m/Y H:i:s') }}</td>
+                                <td>{{ \Illuminate\Support\Carbon::parse($visit->visited_at)->setTimezone('Asia/Jakarta')->format('d/m/Y H:i:s') }}</td>
                                 <td><code>{{ $visit->path }}</code></td>
                                 <td>
                                     @if($visit->is_guest)
@@ -166,7 +166,7 @@
                         labels,
                         datasets: [
                             {
-                                label: 'Total Visits',
+                                label: 'Total Kunjungan',
                                 data: visits,
                                 borderColor: '#0d6efd',
                                 backgroundColor: 'rgba(13, 110, 253, 0.14)',

@@ -125,6 +125,27 @@
             object-fit: cover;
         }
 
+        .maintenance-status-row {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .maintenance-status-badge {
+            display: inline-flex !important;
+            align-items: center;
+            justify-content: center;
+            width: fit-content !important;
+            min-width: max-content;
+            max-width: none !important;
+            flex: 0 0 auto;
+            white-space: nowrap;
+            line-height: 1;
+            padding: 0.32rem 0.62rem;
+            border-radius: 999px;
+        }
+
         @media (max-width: 991.98px) {
             .admin-content {
                 margin-left: 0;
@@ -141,6 +162,7 @@
         $authRoleValue = $authRole instanceof \App\Enums\Role ? $authRole->value : (string) $authRole;
         $canManageUsers = $authRoleValue === 'SUPERADMIN';
         $defaultAvatar = asset('images/default-avatar.svg');
+        $maintenanceEnabled = is_file(public_path('maintenance.enable'));
 
         $resolveAvatarUrl = static function ($user, string $fallback): string {
             if (! $user) {
@@ -210,19 +232,40 @@
                             <a class="nav-link dropdown-toggle p-0 d-flex align-items-center" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
                                 <img src="{{ $avatarUrl }}" class="avatar rounded-circle account-avatar" alt="Avatar {{ $authUser?->name ?? 'Account' }}">
                                 <span class="d-none d-lg-inline-block ms-2 fw-semibold text-dark">
-                                    {{ $authUser?->name ?? 'Account' }}
+                                    {{ $authUser?->name ?? 'Akun' }}
                                 </span>
                             </a>
                             <ul class="dropdown-menu dropdown-menu-end mt-2 py-0">
                                 <li class="px-3 py-2 border-bottom">
-                                    <p class="small text-muted mb-1">Signed in as</p>
+                                    <p class="small text-muted mb-1">Masuk sebagai</p>
                                     <p class="small fw-bold mb-0">{{ $authUser?->email ?? '-' }}</p>
                                 </li>
+                                @if($canManageUsers)
+                                    <li class="px-3 py-2 border-bottom">
+                                        <p class="small text-muted mb-1">Maintenance Mode</p>
+                                        <div class="maintenance-status-row">
+                                            <span class="badge maintenance-status-badge {{ $maintenanceEnabled ? 'bg-danger' : 'bg-success' }}">
+                                                {{ $maintenanceEnabled ? 'Aktif' : 'Nonaktif' }}
+                                            </span>
+                                            @if($maintenanceEnabled)
+                                                <form method="POST" action="{{ route('admin.maintenance.disable') }}" class="ms-auto">
+                                                    @csrf
+                                                    <button type="submit" class="btn btn-sm btn-outline-success">Turn Off</button>
+                                                </form>
+                                            @else
+                                                <form method="POST" action="{{ route('admin.maintenance.enable') }}" class="ms-auto">
+                                                    @csrf
+                                                    <button type="submit" class="btn btn-sm btn-outline-danger">Turn On</button>
+                                                </form>
+                                            @endif
+                                        </div>
+                                    </li>
+                                @endif
                                 <li>
                                     <form method="POST" action="{{ route('logout') }}">
                                         @csrf
                                         <button type="submit" class="dropdown-item d-flex align-items-center text-danger">
-                                            <i class="bi bi-box-arrow-right me-2"></i>Logout
+                                            <i class="bi bi-box-arrow-right me-2"></i>Keluar
                                         </button>
                                     </form>
                                 </li>

@@ -107,7 +107,7 @@
                             <td>{{ $product->category->name }}</td>
                             <td><x-sack-color-badge :color="$product->sack_color" class="px-2 py-1" /></td>
                             <td>{{ $product->nutritions_count }}</td>
-                            <td>{{ optional($product->created_at)->format('d/m/Y') }}</td>
+                            <td>{{ $product->created_at?->setTimezone('Asia/Jakarta')->format('d/m/Y') }}</td>
                             <td class="text-center">
                                 <a href="{{ route('admin.products.edit', $product->id) }}" class="btn btn-sm btn-outline-secondary">
                                     <i class="bi bi-pencil"></i>

@@ -28,7 +28,7 @@
                     <input name="code" value="{{ old('code', $product->code ?? '') }}" class="form-control" placeholder="SA 571 NS" required>
                 </div>
                 <div class="col-md-6">
-                    <label class="form-label">Feed Form</label>
+                    <label class="form-label">Bentuk Pakan</label>
                     <input name="name" value="{{ old('name', $product->name ?? '') }}" class="form-control" placeholder="Pakan Starter Broiler" required>
                 </div>
                 <div class="col-12">

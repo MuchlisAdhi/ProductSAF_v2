@@ -5,6 +5,22 @@
 
     RewriteEngine On
 
+    # Show static maintenance page for HTTP 500/503 when app is unstable.
+    ErrorDocument 500 /maintenance.html
+    ErrorDocument 503 /maintenance.html
+
+    # Manual maintenance toggle from cPanel File Manager.
+    # Enable: create file public/maintenance.enable
+    # Disable: delete file public/maintenance.enable
+    RewriteCond %{REQUEST_URI} !^/maintenance\.html$ [NC]
+    RewriteCond %{REQUEST_URI} !^/images/ [NC]
+    RewriteCond %{REQUEST_URI} !^/favicon\.ico$ [NC]
+    RewriteCond %{REQUEST_URI} !^/robots\.txt$ [NC]
+    RewriteCond %{REQUEST_URI} !^/admin [NC]
+    RewriteCond %{REQUEST_URI} !^/login$ [NC]
+    RewriteCond %{DOCUMENT_ROOT}/maintenance.enable -f
+    RewriteRule ^ - [R=503,L]
+
     # Handle Authorization Header
     RewriteCond %{HTTP:Authorization} .
     RewriteRule .* - [E=HTTP_AUTHORIZATION:%{HTTP:Authorization}]

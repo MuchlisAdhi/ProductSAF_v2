@@ -21,16 +21,16 @@
                     <input type="text" name="q" value="{{ $query }}" class="form-control" placeholder="Cari nama atau email">
                 </div>
                 <div class="col-md-3">
-                    <label class="form-label">Role</label>
+                    <label class="form-label">Hak Akses</label>
                     <select name="role" class="form-select">
-                        <option value="">Semua Roles</option>
+                        <option value="">Semua hak akses</option>
                         @foreach($roles as $role)
                             <option value="{{ $role }}" @selected($roleFilter === $role)>{{ $role }}</option>
                         @endforeach
                     </select>
                 </div>
                 <div class="col-md-2">
-                    <label class="form-label">Rows</label>
+                    <label class="form-label">Jumlah Baris</label>
                     <select name="pageSize" class="form-select">
                         @foreach([5,10,20,50,100] as $size)
                             <option value="{{ $size }}" @selected($pageSize === $size)>{{ $size }}</option>
@@ -50,7 +50,7 @@
                         <th>No</th>
                         <th>Nama</th>
                         <th>Email</th>
-                        <th>Role</th>
+                        <th>Hak Akses</th>
                         <th>Dibuat</th>
                         <th class="text-center">Aksi</th>
                     </tr>
@@ -70,7 +70,7 @@
                             </td>
                             <td>{{ $user->email }}</td>
                             <td>{{ $userRole }}</td>
-                            <td>{{ optional($user->created_at)->format('d/m/Y') }}</td>
+                            <td>{{ $user->created_at?->setTimezone('Asia/Jakarta')->format('d/m/Y') }}</td>
                             <td class="text-center">
                                 <button type="button" class="btn btn-sm btn-outline-secondary" data-bs-toggle="modal" data-bs-target="#editUserModal-{{ $user->id }}">
                                     <i class="bi bi-pencil"></i>
@@ -117,7 +117,7 @@
                             <input type="email" name="email" value="{{ old('email') }}" class="form-control" required>
                         </div>
                         <div class="mb-3">
-                            <label class="form-label">Role</label>
+                            <label class="form-label">Hak Akses</label>
                             <select name="role" class="form-select">
                                 @foreach($roles as $role)
                                     <option value="{{ $role }}" @selected(old('role', 'USER') === $role)>{{ $role }}</option>
@@ -125,7 +125,7 @@
                             </select>
                         </div>
                         <div>
-                            <label class="form-label">Password</label>
+                            <label class="form-label">Kata Sandi</label>
                             <input type="password" name="password" class="form-control" required>
                         </div>
                     </div>

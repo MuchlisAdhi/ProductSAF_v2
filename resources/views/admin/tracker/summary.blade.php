@@ -3,13 +3,13 @@
 @section('content')
     @include('admin.partials.hero', [
         'badge' => 'Tracker',
-        'title' => 'Summary',
+        'title' => 'Ringkasan',
         'subtitle' => 'Ringkasan kunjungan halaman publik berdasarkan periode.',
     ])
 
     @if(! $trackerReady)
         <div class="alert alert-warning">
-            Tabel tracker belum tersedia. Jalankan migrasi terlebih dahulu: <code>php artisan migrate</code>.
+            Tabel pelacak belum tersedia. Jalankan migrasi terlebih dahulu: <code>php artisan migrate</code>.
         </div>
     @else
         <div class="card border-0 shadow mb-4">
@@ -34,7 +34,7 @@
             <div class="col-12 col-md-4 mb-3">
                 <div class="card border-0 shadow h-100">
                     <div class="card-body">
-                        <h2 class="fs-6 fw-normal text-muted mb-1">Total Visits</h2>
+                        <h2 class="fs-6 fw-normal text-muted mb-1">Total Kunjungan</h2>
                         <span class="fs-3 fw-bold">{{ number_format($summary['totalVisits']) }}</span>
                     </div>
                 </div>
@@ -42,7 +42,7 @@
             <div class="col-12 col-md-4 mb-3">
                 <div class="card border-0 shadow h-100">
                     <div class="card-body">
-                        <h2 class="fs-6 fw-normal text-muted mb-1">Guest Visits</h2>
+                        <h2 class="fs-6 fw-normal text-muted mb-1">Kunjungan Tamu</h2>
                         <span class="fs-3 fw-bold">{{ number_format($summary['guestVisits']) }}</span>
                     </div>
                 </div>
@@ -50,7 +50,7 @@
             <div class="col-12 col-md-4 mb-3">
                 <div class="card border-0 shadow h-100">
                     <div class="card-body">
-                        <h2 class="fs-6 fw-normal text-muted mb-1">Unique Visitors</h2>
+                        <h2 class="fs-6 fw-normal text-muted mb-1">Pengunjung Unik</h2>
                         <span class="fs-3 fw-bold">{{ number_format($summary['uniqueVisitors']) }}</span>
                     </div>
                 </div>
@@ -59,7 +59,7 @@
 
         <div class="card border-0 shadow mb-4">
             <div class="card-header">
-                <h2 class="fs-5 fw-bold mb-0">Traffic Summary Chart</h2>
+                <h2 class="fs-5 fw-bold mb-0">Grafik Ringkasan Kunjungan</h2>
             </div>
             <div class="card-body">
                 <canvas id="trackerSummaryChart" height="120"></canvas>
@@ -68,14 +68,14 @@
 
         <div class="card border-0 shadow mb-4">
             <div class="card-header">
-                <h2 class="fs-5 fw-bold mb-0">Top Public Pages</h2>
+                <h2 class="fs-5 fw-bold mb-0">Daftar Halaman Populer</h2>
             </div>
             <div class="table-responsive">
                 <table class="table table-centered mb-0">
                     <thead class="thead-light">
                         <tr>
-                            <th>Path</th>
-                            <th class="text-end">Visits</th>
+                            <th>Lokasi</th>
+                            <th class="text-end">Jumlah Kunjungan</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -114,7 +114,7 @@
                         labels,
                         datasets: [
                             {
-                                label: 'Total Visits',
+                                label: 'Total Kunjungan',
                                 data: visits,
                                 borderColor: '#0d6efd',
                                 backgroundColor: 'rgba(13, 110, 253, 0.15)',
@@ -123,7 +123,7 @@
                                 tension: 0.35,
                             },
                             {
-                                label: 'Guest Visits',
+                                label: 'Kunjungan Tamu',
                                 data: guestVisits,
                                 borderColor: '#f59e0b',
                                 backgroundColor: 'rgba(245, 158, 11, 0.15)',

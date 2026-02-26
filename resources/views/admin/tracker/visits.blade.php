@@ -3,13 +3,13 @@
 @section('content')
     @include('admin.partials.hero', [
         'badge' => 'Tracker',
-        'title' => 'Visits',
+        'title' => 'Kunjungan',
         'subtitle' => 'Daftar detail kunjungan halaman publik.',
     ])
 
     @if(! $trackerReady)
         <div class="alert alert-warning">
-            Tabel tracker belum tersedia. Jalankan migrasi terlebih dahulu: <code>php artisan migrate</code>.
+            Tabel pelacak belum tersedia. Jalankan migrasi terlebih dahulu: <code>php artisan migrate</code>.
         </div>
     @else
         <div class="card border-0 shadow mb-4">
@@ -17,10 +17,10 @@
                 <form method="GET" class="row g-3">
                     <div class="col-md-6">
                         <label class="form-label">Cari</label>
-                        <input type="text" name="q" value="{{ $query }}" class="form-control" placeholder="Path, IP, user agent, visitor hash">
+                        <input type="text" name="q" value="{{ $query }}" class="form-control" placeholder="Lokasi, IP, peramban, hash pengunjung">
                     </div>
                     <div class="col-md-2">
-                        <label class="form-label">Rows</label>
+                        <label class="form-label">Jumlah Baris</label>
                         <select name="pageSize" class="form-select">
                             @foreach([10,25,50,100] as $size)
                                 <option value="{{ $size }}" @selected($pageSize === $size)>{{ $size }}</option>
@@ -29,7 +29,7 @@
                     </div>
                     <div class="col-md-4 d-flex align-items-end gap-2">
                         <button type="submit" class="btn btn-primary">Terapkan</button>
-                        <a href="{{ route('admin.tracker.visits') }}" class="btn btn-outline-secondary">Reset</a>
+                        <a href="{{ route('admin.tracker.visits') }}" class="btn btn-outline-secondary">Setel Ulang</a>
                     </div>
                 </form>
             </div>
@@ -41,24 +41,24 @@
                     <thead class="thead-light">
                         <tr>
                             <th>Waktu</th>
-                            <th>Path</th>
-                            <th>User</th>
+                            <th>Lokasi</th>
+                            <th>Pengguna</th>
                             <th>IP</th>
-                            <th>Method</th>
-                            <th>Agent</th>
-                            <th>Visitor Hash</th>
+                            <th>Metode</th>
+                            <th>Peramban</th>
+                            <th>Hash Pengunjung</th>
                         </tr>
                     </thead>
                     <tbody>
                         @forelse($visits as $visit)
                             <tr>
-                                <td>{{ \Illuminate\Support\Carbon::parse($visit->visited_at)->format('d/m/Y H:i:s') }}</td>
+                                <td>{{ \Illuminate\Support\Carbon::parse($visit->visited_at)->setTimezone('Asia/Jakarta')->format('d/m/Y H:i:s') }}</td>
                                 <td><code>{{ $visit->path }}</code></td>
                                 <td>
                                     @if($visit->is_guest)
-                                        <span class="badge bg-warning text-dark">Guest</span>
+                                        <span class="badge bg-warning text-dark">Tamu</span>
                                     @else
-                                        <span class="badge bg-success">{{ $visit->user_name ?: 'User' }}</span>
+                                        <span class="badge bg-success">{{ $visit->user_name ?: 'Pengguna' }}</span>
                                     @endif
                                 </td>
                                 <td>{{ $visit->ip_address ?: '-' }}</td>

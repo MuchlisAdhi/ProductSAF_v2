@@ -7,6 +7,7 @@ use App\Http\Controllers\Api\ProductController;
 use App\Http\Controllers\Api\UserController;
 use App\Http\Controllers\Web\Admin\CategoryAdminController;
 use App\Http\Controllers\Web\Admin\DashboardController;
+use App\Http\Controllers\Web\Admin\MaintenanceAdminController;
 use App\Http\Controllers\Web\Admin\ProductAdminController;
 use App\Http\Controllers\Web\Admin\TrackerAdminController;
 use App\Http\Controllers\Web\Admin\UserAdminController;
@@ -91,6 +92,9 @@ Route::prefix('admin')
     ->middleware(['auth', 'role:SUPERADMIN'])
     ->name('admin.')
     ->group(function (): void {
+        Route::post('/maintenance/enable', [MaintenanceAdminController::class, 'enable'])->name('maintenance.enable');
+        Route::post('/maintenance/disable', [MaintenanceAdminController::class, 'disable'])->name('maintenance.disable');
+
         Route::get('/users', [UserAdminController::class, 'index'])->name('users.index');
         Route::post('/users', [UserAdminController::class, 'store'])->name('users.store');
         Route::get('/users/{id}/edit', [UserAdminController::class, 'edit'])->name('users.edit');

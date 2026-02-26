@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Middleware\EnsureApiAuthenticated;
+use App\Http\Middleware\ManualMaintenanceMode;
 use App\Http\Middleware\TrackPublicVisit;
 use App\Http\Middleware\EnsureRole;
 use Illuminate\Foundation\Application;
@@ -14,6 +15,17 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
+        $middleware->preventRequestsDuringMaintenance(except: [
+            'admin*',
+            'login',
+            'logout',
+            'up',
+        ]);
+
+        $middleware->web(prepend: [
+            ManualMaintenanceMode::class,
+        ]);
+
         $middleware->validateCsrfTokens(except: [
             'api/*',
         ]);
