@@ -44,6 +44,13 @@ class ManualMaintenanceMode
         return $request->is('admin*')
             || $request->is('login')
             || $request->is('logout')
-            || $request->is('up');
+            || $request->is('up')
+            || $request->is('vendor/*')
+            || $request->is('build/*')
+            || $request->is('images/*')
+            || $request->is('uploads/*')
+            || $request->is('storage/*')
+            || $request->is('favicon.ico')
+            || $request->is('robots.txt');
     }
 }

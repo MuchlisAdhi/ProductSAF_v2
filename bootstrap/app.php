@@ -20,6 +20,13 @@ return Application::configure(basePath: dirname(__DIR__))
             'login',
             'logout',
             'up',
+            'vendor/*',
+            'build/*',
+            'images/*',
+            'uploads/*',
+            'storage/*',
+            'favicon.ico',
+            'robots.txt',
         ]);
 
         $middleware->web(prepend: [

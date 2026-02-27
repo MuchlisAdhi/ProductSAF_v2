@@ -9,6 +9,20 @@ use Throwable;
 
 class MaintenanceAdminController extends Controller
 {
+    private const MAINTENANCE_EXCEPT_PATHS = [
+        'admin*',
+        'login',
+        'logout',
+        'up',
+        'vendor/*',
+        'build/*',
+        'images/*',
+        'uploads/*',
+        'storage/*',
+        'favicon.ico',
+        'robots.txt',
+    ];
+
     /**
      * Enable maintenance marker file used by Apache rewrite rule.
      */
@@ -22,7 +36,7 @@ class MaintenanceAdminController extends Controller
 
             file_put_contents($this->markerPath(), $payload !== false ? $payload : '');
             app()->maintenanceMode()->activate([
-                'except' => ['admin*', 'login', 'logout', 'up'],
+                'except' => self::MAINTENANCE_EXCEPT_PATHS,
                 'redirect' => null,
                 'retry' => 120,
                 'refresh' => null,

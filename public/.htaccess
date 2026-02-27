@@ -14,6 +14,10 @@
     # Disable: delete file public/maintenance.enable
     RewriteCond %{REQUEST_URI} !^/maintenance\.html$ [NC]
     RewriteCond %{REQUEST_URI} !^/images/ [NC]
+    RewriteCond %{REQUEST_URI} !^/vendor/ [NC]
+    RewriteCond %{REQUEST_URI} !^/build/ [NC]
+    RewriteCond %{REQUEST_URI} !^/uploads/ [NC]
+    RewriteCond %{REQUEST_URI} !^/storage/ [NC]
     RewriteCond %{REQUEST_URI} !^/favicon\.ico$ [NC]
     RewriteCond %{REQUEST_URI} !^/robots\.txt$ [NC]
     RewriteCond %{REQUEST_URI} !^/admin [NC]
