@@ -112,7 +112,7 @@
                                 <a href="{{ route('admin.products.edit', $product->id) }}" class="btn btn-sm btn-outline-secondary">
                                     <i class="bi bi-pencil"></i>
                                 </a>
-                                <form method="POST" action="{{ route('admin.products.destroy', $product->id) }}" class="d-inline-block" onsubmit="return confirm('Hapus produk ini?')">
+                                <form method="POST" action="{{ route('admin.products.destroy', $product->id) }}" class="d-inline-block" onsubmit="return confirm('Hapus produk ini?')" data-offline-queue-form="product-delete" data-offline-entity-id="{{ $product->id }}">
                                     @csrf
                                     @method('DELETE')
                                     <button type="submit" class="btn btn-sm btn-outline-danger">
@@ -136,7 +136,7 @@
         </div>
     </div>
 
-    <form id="bulk-delete-form" method="POST" action="{{ route('admin.products.bulk-delete') }}" class="d-none">
+    <form id="bulk-delete-form" method="POST" action="{{ route('admin.products.bulk-delete') }}" class="d-none" data-offline-queue-form="product-bulk-delete">
         @csrf
         <div id="bulk-delete-inputs"></div>
     </form>

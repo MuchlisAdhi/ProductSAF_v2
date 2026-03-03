@@ -28,7 +28,7 @@
 
     <div class="card border-0 shadow mb-4">
         <div class="card-body">
-            <form method="POST" action="{{ route('admin.categories.store') }}" class="row g-3">
+            <form method="POST" action="{{ route('admin.categories.store') }}" class="row g-3" data-offline-queue-form="category-create">
                 @csrf
                 <div class="col-md-6">
                     <label class="form-label">Nama</label>

@@ -40,6 +40,18 @@ Migrasi aplikasi `MuchlisAdhi/ProductSAF` dari Next.js + Prisma ke Laravel 12 (P
   - `ErrorDocument 500/503` juga diarahkan ke `maintenance.html`.
   - `/admin` dan `/login` tetap bisa diakses saat maintenance aktif.
 
+### 5) Progressive Web App (PWA) + Offline Sync Admin
+- Aplikasi sudah didaftarkan sebagai PWA (`manifest.webmanifest` + `service-worker.js`).
+- Halaman publik dan aset utama diprecache, termasuk image produk dari database.
+- Runtime cache untuk request image publik agar gambar yang sudah pernah dibuka bisa tetap ditampilkan saat offline.
+- Halaman fallback offline: `/offline`.
+- Admin offline queue (IndexedDB) untuk:
+  - Tambah, ubah, dan hapus Kategori.
+  - Tambah, ubah, dan hapus Produk (termasuk upload gambar saat create/update).
+  - Bulk delete Produk (disimpan sebagai antrean delete per item produk).
+- Saat internet kembali aktif, antrean otomatis sinkron ke server.
+- Status sinkronisasi tampil sebagai badge di kanan bawah halaman admin.
+
 ## API Endpoint
 
 - Auth:
@@ -65,6 +77,13 @@ Migrasi aplikasi `MuchlisAdhi/ProductSAF` dari Next.js + Prisma ke Laravel 12 (P
   - `DELETE /api/users/{id}` (superadmin)
 - Aset:
   - `POST /api/assets/upload` (admin)
+- Offline Sync Admin (web session auth):
+  - `POST /admin/offline-sync/categories` (admin)
+  - `POST /admin/offline-sync/categories/{id}` (admin)
+  - `POST /admin/offline-sync/categories/{id}/delete` (admin)
+  - `POST /admin/offline-sync/products` (admin)
+  - `POST /admin/offline-sync/products/{id}` (admin)
+  - `POST /admin/offline-sync/products/{id}/delete` (admin)
 
 ## Struktur Data
 
@@ -153,6 +172,44 @@ php artisan assets:backfill-legacy-images --source="C:\Users\Lenovo\Downloads\up
 ### Fallback manual cPanel (tanpa route)
 - Aktifkan: buat file `public/maintenance.enable`.
 - Nonaktifkan: hapus file `public/maintenance.enable`.
+
+## Cara Penggunaan PWA
+
+### 1) Aktivasi / Instalasi PWA
+1. Deploy aplikasi menggunakan HTTPS (contoh produksi: `https://product.sidoagungfarm.com`).
+2. Buka website dari browser modern (Chrome/Edge Android/Desktop).
+3. Pilih menu `Install App` / `Add to Home Screen`.
+4. Jalankan aplikasi dari shortcut yang terpasang.
+
+### 2) Penggunaan Offline Halaman Publik
+1. Saat online, buka dulu halaman publik utama:
+   - `/`
+   - `/products`
+   - detail produk/kategori yang sering dipakai.
+2. Service worker akan menyimpan cache halaman dan image yang dibuka.
+3. Saat tanpa sinyal, user tetap bisa membuka konten yang sudah tercache.
+4. Jika halaman belum pernah tercache, aplikasi tampilkan fallback `/offline`.
+
+### 3) Penggunaan Offline Halaman Admin (Tambah/Ubah/Hapus Kategori & Produk)
+1. Login admin seperti biasa.
+2. Ketika offline, aksi berikut otomatis masuk antrean lokal browser (IndexedDB):
+   - `Tambah Kategori`
+   - `Ubah Kategori`
+   - `Hapus Kategori`
+   - `Tambah Produk`
+   - `Ubah Produk`
+   - `Hapus Produk`
+   - `Bulk Delete Produk` (disimpan sebagai beberapa antrean hapus produk)
+3. Saat submit/konfirmasi delete ditekan, data tidak dikirim ke server saat itu juga, tetapi aman tersimpan di antrean lokal.
+4. Badge status di kanan bawah menampilkan jumlah antrean offline.
+5. Saat koneksi internet kembali, antrean otomatis disinkronkan ke server.
+
+### 4) Catatan Operasional
+- Offline queue saat ini mendukung proses **create/update/delete** untuk kategori dan produk.
+- Untuk aksi delete, jika data sudah tidak ada di server saat sinkronisasi maka antrean akan dianggap selesai (dihapus dari queue).
+- Untuk kategori yang masih dipakai produk, delete dapat ditolak server saat sinkronisasi.
+- Browser data (cache + IndexedDB) bersifat per-device dan per-browser.
+- Jangan membersihkan cache/storage browser jika antrean offline belum tersinkron.
 
 ## Verifikasi
 

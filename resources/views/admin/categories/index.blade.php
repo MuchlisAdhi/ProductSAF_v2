@@ -106,7 +106,7 @@
                                 <a href="{{ route('admin.categories.edit', $category->id) }}" class="btn btn-sm btn-outline-secondary">
                                     <i class="bi bi-pencil"></i>
                                 </a>
-                                <form method="POST" action="{{ route('admin.categories.destroy', $category->id) }}" class="d-inline-block" onsubmit="return confirm('Hapus kategori ini?')">
+                                <form method="POST" action="{{ route('admin.categories.destroy', $category->id) }}" class="d-inline-block" onsubmit="return confirm('Hapus kategori ini?')" data-offline-queue-form="category-delete" data-offline-entity-id="{{ $category->id }}">
                                     @csrf
                                     @method('DELETE')
                                     <button type="submit" class="btn btn-sm btn-outline-danger">

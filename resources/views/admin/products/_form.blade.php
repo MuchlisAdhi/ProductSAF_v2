@@ -9,9 +9,21 @@
     $initialImageLabel = (string) ($product?->image?->original_file_name ?? 'Gambar saat ini');
     $removeImageFlag = old('remove_image', '0') === '1';
     $showInitialImage = $initialImagePath !== '' && ! $removeImageFlag;
+    $isCreateMode = $method === 'POST' && empty($product?->id);
+    $isEditMode = !$isCreateMode && !empty($product?->id);
 @endphp
 
-<form method="POST" action="{{ $action }}" enctype="multipart/form-data">
+<form
+    method="POST"
+    action="{{ $action }}"
+    enctype="multipart/form-data"
+    @if($isCreateMode)
+        data-offline-queue-form="product-create"
+    @elseif($isEditMode)
+        data-offline-queue-form="product-update"
+        data-offline-entity-id="{{ $product->id }}"
+    @endif
+>
     @csrf
     @if($method !== 'POST')
         @method($method)

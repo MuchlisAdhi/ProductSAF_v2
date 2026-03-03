@@ -3,7 +3,11 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
+    <meta name="theme-color" content="#1b5e20">
     <title>{{ $title ?? 'Sidoagung Farm Katalog Produk' }}</title>
+    <link rel="manifest" href="{{ route('pwa.manifest') }}">
+    <link rel="apple-touch-icon" href="{{ asset('images/logo/saf-logo.png') }}">
     <link rel="icon" href="{{ asset('images/logo/saf-logo-merah.ico') }}" type="image/x-icon">
     <link rel="shortcut icon" href="{{ asset('images/logo/saf-logo-merah.ico') }}" type="image/x-icon">
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -58,6 +62,7 @@
         </div>
     </footer>
     <script src="https://cdn.jsdelivr.net/npm/preline@2.5.0/dist/preline.min.js"></script>
+    <script src="{{ asset('js/pwa-register.js') }}"></script>
     @stack('scripts')
 </body>
 </html>

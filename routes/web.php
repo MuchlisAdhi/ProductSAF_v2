@@ -8,12 +8,18 @@ use App\Http\Controllers\Api\UserController;
 use App\Http\Controllers\Web\Admin\CategoryAdminController;
 use App\Http\Controllers\Web\Admin\DashboardController;
 use App\Http\Controllers\Web\Admin\MaintenanceAdminController;
+use App\Http\Controllers\Web\Admin\OfflineSyncController;
 use App\Http\Controllers\Web\Admin\ProductAdminController;
 use App\Http\Controllers\Web\Admin\TrackerAdminController;
 use App\Http\Controllers\Web\Admin\UserAdminController;
 use App\Http\Controllers\Web\AuthPageController;
 use App\Http\Controllers\Web\CatalogController;
+use App\Http\Controllers\Web\PwaController;
 use Illuminate\Support\Facades\Route;
+
+Route::get('/manifest.webmanifest', [PwaController::class, 'manifest'])->name('pwa.manifest');
+Route::get('/service-worker.js', [PwaController::class, 'serviceWorker'])->name('pwa.service-worker');
+Route::get('/offline', [PwaController::class, 'offline'])->name('pwa.offline');
 
 Route::middleware('track.public')->group(function (): void {
     Route::get('/', [CatalogController::class, 'home'])->name('home');
@@ -80,6 +86,12 @@ Route::prefix('admin')
         Route::get('/categories/{id}/edit', [CategoryAdminController::class, 'edit'])->name('categories.edit');
         Route::put('/categories/{id}', [CategoryAdminController::class, 'update'])->name('categories.update');
         Route::delete('/categories/{id}', [CategoryAdminController::class, 'destroy'])->name('categories.destroy');
+        Route::post('/offline-sync/categories', [OfflineSyncController::class, 'storeCategory'])->name('offline-sync.categories.store');
+        Route::post('/offline-sync/categories/{id}', [OfflineSyncController::class, 'updateCategory'])->name('offline-sync.categories.update');
+        Route::post('/offline-sync/categories/{id}/delete', [OfflineSyncController::class, 'deleteCategory'])->name('offline-sync.categories.delete');
+        Route::post('/offline-sync/products', [OfflineSyncController::class, 'storeProduct'])->name('offline-sync.products.store');
+        Route::post('/offline-sync/products/{id}', [OfflineSyncController::class, 'updateProduct'])->name('offline-sync.products.update');
+        Route::post('/offline-sync/products/{id}/delete', [OfflineSyncController::class, 'deleteProduct'])->name('offline-sync.products.delete');
 
         Route::prefix('/tracker')->name('tracker.')->group(function (): void {
             Route::get('/summary', [TrackerAdminController::class, 'summary'])->name('summary');

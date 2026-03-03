@@ -3,7 +3,11 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
+    <meta name="theme-color" content="#1b5e20">
     <title>{{ $title ?? 'Sidoagung Farm Admin' }}</title>
+    <link rel="manifest" href="{{ route('pwa.manifest') }}">
+    <link rel="apple-touch-icon" href="{{ asset('images/logo/saf-logo.png') }}">
     <link rel="icon" href="{{ asset('images/logo/saf-logo-merah.ico') }}" type="image/x-icon">
     <link rel="shortcut icon" href="{{ asset('images/logo/saf-logo-merah.ico') }}" type="image/x-icon">
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -289,6 +293,18 @@
     <script src="{{ asset('vendor/volt/vendor/notyf/notyf.min.js') }}"></script>
     <script src="{{ asset('vendor/volt/vendor/simplebar/dist/simplebar.min.js') }}"></script>
     <script src="{{ asset('vendor/volt/assets/js/volt.js') }}"></script>
+    <script>
+        window.SAF_OFFLINE_SYNC_CONFIG = {
+            categoryStoreEndpoint: @json(route('admin.offline-sync.categories.store')),
+            categoryUpdateEndpointTemplate: @json(route('admin.offline-sync.categories.update', ['id' => '__ID__'])),
+            categoryDeleteEndpointTemplate: @json(route('admin.offline-sync.categories.delete', ['id' => '__ID__'])),
+            productStoreEndpoint: @json(route('admin.offline-sync.products.store')),
+            productUpdateEndpointTemplate: @json(route('admin.offline-sync.products.update', ['id' => '__ID__'])),
+            productDeleteEndpointTemplate: @json(route('admin.offline-sync.products.delete', ['id' => '__ID__'])),
+        };
+    </script>
+    <script src="{{ asset('js/pwa-register.js') }}"></script>
+    <script src="{{ asset('js/admin-offline-sync.js') }}"></script>
     <script>
         (() => {
             if (typeof window.SmoothScroll === 'function') {
