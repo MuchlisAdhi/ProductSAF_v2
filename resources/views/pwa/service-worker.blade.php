@@ -9,18 +9,40 @@ const OFFLINE_URL = @json($offlineUrl);
 const PRECACHE_URLS = @json($precacheUrls);
 const DYNAMIC_BOOTSTRAP_URL = @json($bootstrapDataUrl);
 const DYNAMIC_VERSION_KEY = '/__pwa_bootstrap_version__';
+const PUBLIC_WARMUP_KEY = '/__pwa_public_warmup_version__';
 const DYNAMIC_REFRESH_SYNC_TAG = 'saf-pwa-dynamic-refresh';
 const PERIODIC_REFRESH_SYNC_TAG = 'saf-pwa-periodic-refresh';
 const OFFLINE_SYNC_TAG = 'saf-admin-offline-sync';
 const DYNAMIC_REFRESH_INTERVAL_MS = 5 * 60 * 1000;
+const INSTALL_WARMUP_TIMEOUT_MS = 60 * 1000;
+const DEFAULT_PREFETCH_RETRIES = 2;
+const DEFAULT_PREFETCH_CONCURRENCY = 4;
+const SHELL_FALLBACK_URLS = ['/', '/products', '/splash-screen'];
 const EMERGENCY_OFFLINE_HTML = '<!doctype html><html lang="id"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Offline</title><style>body{margin:0;font-family:Arial,sans-serif;background:#f1f5f9;color:#0f172a;display:grid;place-items:center;min-height:100vh;padding:16px}main{max-width:520px;background:#fff;border:1px solid #d1d5db;border-radius:12px;padding:20px;box-shadow:0 10px 25px rgba(15,23,42,.08)}h1{margin:0 0 8px;font-size:1.2rem}p{margin:0;color:#475569;line-height:1.5}a{display:inline-block;margin-top:14px;background:#1b5e20;color:#fff;text-decoration:none;padding:10px 14px;border-radius:8px;font-weight:700}</style></head><body><main><h1>Koneksi Internet Tidak Tersedia</h1><p>Halaman belum tersedia offline. Coba lagi saat internet aktif.</p><a href="/">Kembali ke Beranda</a></main></body></html>';
 
 let lastDynamicRefreshAt = 0;
+const wait = (ms) => new Promise((resolve) => {
+    setTimeout(resolve, ms);
+});
+const withTimeout = async (promise, timeoutMs) => {
+    let timeoutHandle;
+
+    const timeoutPromise = new Promise((resolve) => {
+        timeoutHandle = setTimeout(() => {
+            resolve(null);
+        }, timeoutMs);
+    });
+
+    try {
+        return await Promise.race([promise, timeoutPromise]);
+    } finally {
+        clearTimeout(timeoutHandle);
+    }
+};
 
 self.addEventListener('install', (event) => {
     event.waitUntil((async () => {
-        await cacheStaticPrecache();
-        await ensureOfflineFallbackCached();
+        await withTimeout(warmupPublicCache({ force: true, notify: false }), INSTALL_WARMUP_TIMEOUT_MS);
         await self.skipWaiting();
     })());
 });
@@ -56,6 +78,10 @@ self.addEventListener('message', (event) => {
 
     if (event.data.type === 'REFRESH_DYNAMIC_CACHE') {
         event.waitUntil(refreshDynamicResources({ force: false }));
+    }
+
+    if (event.data.type === 'WARMUP_PUBLIC_CACHE') {
+        event.waitUntil(handleWarmupMessage(event));
     }
 });
 
@@ -140,17 +166,15 @@ const normalizeUrl = (value) => {
     }
 };
 
-const prefetchHeaders = {
-    'X-PWA-Prefetch': '1',
-    Accept: '*/*',
-};
-
 const cacheStaticPrecache = async () => {
     const urls = PRECACHE_URLS
         .map((url) => normalizeUrl(url))
         .filter((url) => typeof url === 'string' && url !== '');
 
-    await cacheUrls(urls);
+    return cacheUrls(urls, {
+        retries: DEFAULT_PREFETCH_RETRIES,
+        concurrency: DEFAULT_PREFETCH_CONCURRENCY,
+    });
 };
 
 const ensureOfflineFallbackCached = async () => {
@@ -165,7 +189,6 @@ const ensureOfflineFallbackCached = async () => {
     try {
         const response = await fetch(new Request(offlineAbsolute, {
             cache: 'reload',
-            headers: prefetchHeaders,
         }));
 
         if (!response.ok) {
@@ -179,6 +202,63 @@ const ensureOfflineFallbackCached = async () => {
     }
 };
 
+const warmupPublicCache = async ({ force, notify }) => {
+    const staticResult = await cacheStaticPrecache();
+    await ensureOfflineFallbackCached();
+    const dynamicResult = await refreshDynamicResources({ force, notify });
+    const completed = Boolean(dynamicResult) && dynamicResult.failed === 0;
+
+    if (completed) {
+        await markPublicWarmup(dynamicResult?.version || null);
+    }
+
+    return {
+        version: dynamicResult?.version || null,
+        static: staticResult,
+        dynamic: dynamicResult,
+        completed,
+    };
+};
+
+const handleWarmupMessage = async (event) => {
+    const port = event.ports && event.ports[0] ? event.ports[0] : null;
+    const respond = (payload) => {
+        if (!port) {
+            return;
+        }
+
+        try {
+            port.postMessage(payload);
+        } catch (error) {
+            // Ignore port failures.
+        }
+    };
+
+    try {
+        const force = Boolean(event.data?.force);
+        const result = await warmupPublicCache({ force, notify: true });
+        respond({
+            ok: Boolean(result.completed),
+            result,
+        });
+    } catch (error) {
+        respond({
+            ok: false,
+            error: error instanceof Error ? error.message : 'Warmup failed',
+        });
+    }
+};
+
+const markPublicWarmup = async (version) => {
+    const dataCache = await caches.open(DATA_CACHE);
+    const value = String(version || Date.now());
+    await dataCache.put(PUBLIC_WARMUP_KEY, new Response(value, {
+        headers: {
+            'Content-Type': 'text/plain; charset=UTF-8',
+        },
+    }));
+};
+
 const scheduleDynamicRefresh = async () => {
     const now = Date.now();
     if (now - lastDynamicRefreshAt < DYNAMIC_REFRESH_INTERVAL_MS) {
@@ -189,19 +269,30 @@ const scheduleDynamicRefresh = async () => {
     await refreshDynamicResources({ force: false });
 };
 
-const refreshDynamicResources = async ({ force }) => {
+const refreshDynamicResources = async ({ force, notify = true }) => {
     let response;
     try {
         response = await fetch(new Request(DYNAMIC_BOOTSTRAP_URL, {
             cache: 'no-store',
-            headers: prefetchHeaders,
         }));
     } catch (error) {
-        return;
+        return {
+            version: null,
+            total: 0,
+            success: 0,
+            failed: 0,
+            skipped: true,
+        };
     }
 
     if (!response.ok) {
-        return;
+        return {
+            version: null,
+            total: 0,
+            success: 0,
+            failed: 0,
+            skipped: true,
+        };
     }
 
     const payloadClone = response.clone();
@@ -209,7 +300,13 @@ const refreshDynamicResources = async ({ force }) => {
     try {
         payload = await response.json();
     } catch (error) {
-        return;
+        return {
+            version: null,
+            total: 0,
+            success: 0,
+            failed: 0,
+            skipped: true,
+        };
     }
 
     const dataCache = await caches.open(DATA_CACHE);
@@ -220,21 +317,41 @@ const refreshDynamicResources = async ({ force }) => {
     const previousVersion = previousVersionResponse ? (await previousVersionResponse.text()) : '';
 
     if (!force && nextVersion !== '' && nextVersion === previousVersion) {
-        return;
+        return {
+            version: nextVersion,
+            total: 0,
+            success: 0,
+            failed: 0,
+            skipped: true,
+        };
     }
 
-    if (nextVersion !== '') {
+    const dynamicUrls = Array.isArray(payload?.urls) ? payload.urls : [];
+    const cacheResult = await cacheUrls(dynamicUrls, {
+        retries: DEFAULT_PREFETCH_RETRIES,
+        concurrency: DEFAULT_PREFETCH_CONCURRENCY,
+    });
+
+    if (nextVersion !== '' && cacheResult.failed === 0) {
         await dataCache.put(DYNAMIC_VERSION_KEY, new Response(nextVersion, {
             headers: { 'Content-Type': 'text/plain; charset=UTF-8' },
         }));
     }
 
-    const dynamicUrls = Array.isArray(payload?.urls) ? payload.urls : [];
-    await cacheUrls(dynamicUrls);
-    await notifyClientsDynamicRefresh(nextVersion);
+    if (notify) {
+        await notifyClientsDynamicRefresh(nextVersion);
+    }
+
+    return {
+        version: nextVersion || null,
+        total: cacheResult.total,
+        success: cacheResult.success,
+        failed: cacheResult.failed,
+        skipped: false,
+    };
 };
 
-const cacheUrls = async (urls) => {
+const cacheUrls = async (urls, options = {}) => {
     const uniqueUrls = [];
     const seen = new Set();
 
@@ -247,9 +364,25 @@ const cacheUrls = async (urls) => {
         uniqueUrls.push(normalized);
     }
 
+    if (uniqueUrls.length === 0) {
+        return {
+            total: 0,
+            success: 0,
+            failed: 0,
+        };
+    }
+
+    const retries = Number.isFinite(options.retries)
+        ? Math.max(0, Number(options.retries))
+        : DEFAULT_PREFETCH_RETRIES;
+    const concurrency = Number.isFinite(options.concurrency)
+        ? Math.max(1, Math.min(6, Number(options.concurrency)))
+        : DEFAULT_PREFETCH_CONCURRENCY;
+
     const queue = uniqueUrls.slice();
     const workers = [];
-    const concurrency = 8;
+    let success = 0;
+    let failed = 0;
 
     for (let index = 0; index < concurrency; index += 1) {
         workers.push((async () => {
@@ -258,12 +391,24 @@ const cacheUrls = async (urls) => {
                 if (!nextUrl) {
                     continue;
                 }
-                await prefetchAndCache(nextUrl);
+
+                const cached = await prefetchAndCache(nextUrl, { retries });
+                if (cached) {
+                    success += 1;
+                } else {
+                    failed += 1;
+                }
             }
         })());
     }
 
     await Promise.all(workers);
+
+    return {
+        total: uniqueUrls.length,
+        success,
+        failed,
+    };
 };
 
 const resolveCacheName = (pathname) => {
@@ -286,25 +431,45 @@ const resolveCacheName = (pathname) => {
     return PAGE_CACHE;
 };
 
-const prefetchAndCache = async (url) => {
+const prefetchAndCache = async (url, options = {}) => {
     const absoluteUrl = new URL(url, self.location.origin);
     const cacheName = resolveCacheName(absoluteUrl.pathname);
     const cache = await caches.open(cacheName);
 
-    try {
-        const request = new Request(absoluteUrl.toString(), {
-            cache: 'reload',
-            headers: prefetchHeaders,
-        });
-        const response = await fetch(request);
-        if (!response.ok) {
-            return;
-        }
+    const retries = Number.isFinite(options.retries)
+        ? Math.max(0, Number(options.retries))
+        : DEFAULT_PREFETCH_RETRIES;
+    const pathKey = absoluteUrl.pathname + absoluteUrl.search;
 
-        await cache.put(request, response.clone());
-    } catch (error) {
-        // Ignore each prefetch failure and keep progressing.
+    for (let attempt = 0; attempt <= retries; attempt += 1) {
+        try {
+            const request = new Request(absoluteUrl.toString(), {
+                cache: 'reload',
+            });
+            const response = await fetch(request);
+            if (!response.ok) {
+                if (attempt < retries) {
+                    await wait(180 * (attempt + 1));
+                    continue;
+                }
+
+                return false;
+            }
+
+            await cache.put(request, response.clone());
+            await cache.put(new Request(pathKey), response.clone());
+            return true;
+        } catch (error) {
+            if (attempt < retries) {
+                await wait(180 * (attempt + 1));
+                continue;
+            }
+
+            return false;
+        }
     }
+
+    return false;
 };
 
 const cacheFirst = async (request, cacheName) => {
@@ -397,9 +562,21 @@ const handleNavigate = async (request) => {
         return response;
     } catch (error) {
         const pageCache = await caches.open(PAGE_CACHE);
-        const cachedPage = await pageCache.match(request);
+        const cachedPage = await pageCache.match(request) || await pageCache.match(request, { ignoreSearch: true });
         if (cachedPage) {
             return cachedPage;
+        }
+
+        const requestUrl = new URL(request.url);
+        const pathOnlyRequest = new Request(requestUrl.pathname);
+        const cachedPathOnly = await pageCache.match(pathOnlyRequest) || await caches.match(requestUrl.pathname);
+        if (cachedPathOnly) {
+            return cachedPathOnly;
+        }
+
+        const shellFallback = await getShellFallbackResponse();
+        if (shellFallback) {
+            return shellFallback;
         }
 
         const fallback = await getOfflineFallbackResponse();
@@ -429,6 +606,32 @@ const getOfflineFallbackResponse = async () => {
         const match = await caches.match(key);
         if (match) {
             return match;
+        }
+    }
+
+    return null;
+};
+
+const getShellFallbackResponse = async () => {
+    for (const url of SHELL_FALLBACK_URLS) {
+        const normalized = normalizeUrl(url);
+        if (!normalized) {
+            continue;
+        }
+
+        const absolute = new URL(normalized, self.location.origin).toString();
+        const keys = [
+            new Request(normalized),
+            new Request(absolute),
+            normalized,
+            absolute,
+        ];
+
+        for (const key of keys) {
+            const match = await caches.match(key, { ignoreSearch: true });
+            if (match) {
+                return match;
+            }
         }
     }
 

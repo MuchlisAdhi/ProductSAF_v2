@@ -1,6 +1,6 @@
 ﻿@php
     $waNumber = '628156710231';
-    $waMessage = rawurlencode('Halo, saya ingin mengetahui lebih lanjut tentang produk PT. SidoAgung Farm.');
+    $waMessage = rawurlencode('Halo, saya ingin mengetahui lebih lanjut tentang produk PT. Sidoagung Farm.');
     $waUrl = "https://wa.me/{$waNumber}?text={$waMessage}";
 @endphp
 
@@ -16,7 +16,7 @@
                     <img src="{{ asset('images/logo/saf-logo.png') }}" alt="SAF">
                 </span>
                 <span class="saf-wa-agent-meta">
-                    <strong>PT. SidoAgung Farm</strong>
+                    <strong>PT. Sidoagung Farm</strong>
                     <small>Tim Marketing</small>
                 </span>
             </div>
@@ -35,7 +35,7 @@
                 </span>
                 <div class="saf-wa-bubble">
                     <p>
-                        Halo! Selamat datang di <strong>PT. SidoAgung Farm</strong>.<br>
+                        Halo! Selamat Datang di <br> <strong>PT. Sidoagung Farm</strong>.<br>
                         Ada yang bisa kami bantu?
                     </p>
                     <p class="saf-wa-time">

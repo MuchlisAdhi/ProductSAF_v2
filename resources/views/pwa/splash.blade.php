@@ -339,15 +339,15 @@
         <div class="logo-wrap">
             <img src="{{ asset('images/logo/saf-logo.png') }}" alt="SAF Logo">
         </div>
-        <p class="katalog-label">Produk Katalog</p>
-        <h1>PT. SidoAgung Farm</h1>
+        <p class="katalog-label">Katalog Produk</p>
+        <h1>PT. Sidoagung Farm</h1>
         <div class="divider"></div>
-        <p class="tagline">Kualitas Terbaik, Pilihan Utama</p>
+        <p class="tagline">Menjadi Tuan Rumah Di Negeri Sendiri</p>
     </div>
 
     <div class="loader">
         <div class="loader-dots"><span></span><span></span><span></span><span></span></div>
-        <p>Memuat...</p>
+        <p id="saf-splash-loader-label">Memuat...</p>
     </div>
 
     <div class="bottom-bar"></div>
@@ -365,8 +365,12 @@
 <script>
     (() => {
         const splash = document.getElementById('saf-splash');
+        const loaderLabel = document.getElementById('saf-splash-loader-label');
         const fallbackTarget = @json(route('home', absolute: false));
         const target = @json(request()->query('next', route('home', absolute: false)));
+        const minSplashDurationMs = 3200;
+        const fadeDurationMs = 700;
+        const warmupTimeoutMs = 30000;
 
         const resolveTarget = (value) => {
             if (typeof value !== 'string') return fallbackTarget;
@@ -375,14 +379,41 @@
         };
 
         const goTo = resolveTarget(target);
+        const sleep = (ms) => new Promise((resolve) => window.setTimeout(resolve, ms));
 
-        window.setTimeout(() => {
+        const waitWarmup = async () => {
+            if (!window.SafPwa || typeof window.SafPwa.awaitInitialWarmup !== 'function') {
+                return;
+            }
+
+            try {
+                if (loaderLabel) {
+                    loaderLabel.textContent = 'Menyiapkan mode offline...';
+                }
+
+                await window.SafPwa.awaitInitialWarmup({
+                    force: false,
+                    timeoutMs: warmupTimeoutMs,
+                });
+            } catch (error) {
+                // Keep launch resilient if warmup cannot complete in time.
+            }
+        };
+
+        (async () => {
+            await Promise.all([
+                sleep(minSplashDurationMs),
+                waitWarmup(),
+            ]);
+
+            if (loaderLabel) {
+                loaderLabel.textContent = 'Membuka aplikasi...';
+            }
+
             splash?.classList.add('fade-out');
-        }, 3200);
-
-        window.setTimeout(() => {
+            await sleep(fadeDurationMs);
             window.location.replace(goTo);
-        }, 3900);
+        })();
     })();
 </script>
 </body>
