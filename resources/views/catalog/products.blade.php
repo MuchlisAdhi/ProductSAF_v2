@@ -25,14 +25,14 @@
                         </div>
                     @endif
                 </div>
-                <span class="inline-flex items-center rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1 text-xs font-semibold text-emerald-700">
+                <span id="products-count-badge" class="inline-flex items-center rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1 text-xs font-semibold text-emerald-700">
                     {{ $filteredCount }} produk
                 </span>
             </div>
         </div>
 
         <div class="catalog-panel overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm">
-            <form method="GET" action="{{ $basePath }}" class="grid gap-3 border-b border-slate-200 p-4 sm:grid-cols-2 sm:p-5 lg:grid-cols-6">
+            <form id="products-filter-form" method="GET" action="{{ $basePath }}" class="grid gap-3 border-b border-slate-200 p-4 sm:grid-cols-2 sm:p-5 lg:grid-cols-6">
                 <div class="sm:col-span-2">
                     <label class="mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-600">Cari</label>
                     <input
@@ -99,59 +99,71 @@
                     <button type="submit" class="inline-flex items-center rounded-lg bg-emerald-700 px-4 py-2 text-sm font-semibold text-white transition hover:bg-emerald-600">Terapkan</button>
                 </div>
             </form>
-
-            <div class="p-4 sm:p-5">
-                @if($products->count() === 0)
-                    <div class="rounded-2xl border border-dashed border-slate-300 bg-slate-50 px-5 py-8 text-center sm:px-6">
-                        <span class="mx-auto grid h-12 w-12 place-items-center rounded-xl bg-white text-slate-500 ring-1 ring-slate-200">
-                            <x-lucide-search-x class="h-6 w-6" />
-                        </span>
-                        <h3 class="mt-3 text-base font-semibold text-slate-900">Produk tidak ditemukan</h3>
-                        <p class="mx-auto mt-1 max-w-lg text-sm text-slate-600">
-                            Coba ubah filter pencarian, kategori, atau warna karung. Anda juga bisa setel ulang filter untuk melihat semua produk lagi.
-                        </p>
-                        <a href="{{ $basePath }}" class="mt-4 inline-flex items-center rounded-lg bg-emerald-700 px-4 py-2 text-sm font-semibold text-white transition hover:bg-emerald-600">
-                            Setel ulang filter
-                        </a>
-                    </div>
-                @else
-                    <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-                        @foreach($products as $product)
-                            <a href="{{ route('products.show', $product->id) }}?returnTo={{ urlencode(request()->fullUrl()) }}" class="js-product-card catalog-card group relative rounded-2xl border border-slate-200 bg-white p-4 transition hover:-translate-y-0.5 hover:border-emerald-300 hover:shadow-md">
-                                <div class="flex items-start gap-3">
-                                    <div class="relative h-24 w-20 shrink-0 overflow-hidden rounded-lg border border-slate-200 bg-slate-50">
-                                        <div class="catalog-skeleton absolute inset-0"></div>
-                                        <img
-                                            src="{{ $product->image?->thumbnail_path ?? $product->image?->system_path ?? 'https://placehold.co/120x180/e2e8f0/334155?text=No+Image' }}"
-                                            alt="{{ $product->code }}"
-                                            class="h-full w-full object-cover catalog-lazy-image transition-opacity duration-300"
-                                            data-lazy-image
-                                            loading="lazy"
-                                            decoding="async"
-                                            fetchpriority="low"
-                                            width="120"
-                                            height="180"
-                                        >
-                                    </div>
-                                    <div class="min-w-0 flex-1">
-                                        <p class="text-sm font-semibold tracking-wide text-emerald-700">{{ $product->code }}</p>
-                                        <p class="mt-1 line-clamp-2 text-base font-semibold text-slate-900">{{ $product->name }}</p>
-                                        <div class="mt-2 flex flex-wrap items-center gap-2">
-                                            <x-sack-color-badge :color="$product->sack_color" variant="outline" class="px-2 py-0.5" />
-                                            @if($product->category)
-                                                <span class="rounded-full bg-sky-100 px-2 py-0.5 text-[11px] font-semibold text-sky-800">{{ $product->category->name }}</span>
-                                            @endif
-                                        </div>
-                                        <p class="mt-2 line-clamp-2 text-xs text-slate-600">{{ $product->description }}</p>
-                                    </div>
-                                </div>
-                            </a>
-                        @endforeach
-                    </div>
-                @endif
+            <div id="products-offline-notice" class="hidden border-b border-amber-200 bg-amber-50 px-4 py-2 text-xs font-semibold text-amber-800 sm:px-5">
+                Mode offline aktif. Pencarian dijalankan dari cache lokal.
             </div>
 
-            <div class="border-t border-slate-200 bg-slate-50/70 px-4 py-3 sm:px-6">
+            <div class="p-4 sm:p-5">
+                <div id="products-empty-state" class="{{ $products->count() === 0 ? '' : 'hidden ' }}rounded-2xl border border-dashed border-slate-300 bg-slate-50 px-5 py-8 text-center sm:px-6">
+                    <span class="mx-auto grid h-12 w-12 place-items-center rounded-xl bg-white text-slate-500 ring-1 ring-slate-200">
+                        <x-lucide-search-x class="h-6 w-6" />
+                    </span>
+                    <h3 class="mt-3 text-base font-semibold text-slate-900">Produk tidak ditemukan</h3>
+                    <p class="mx-auto mt-1 max-w-lg text-sm text-slate-600">
+                        Coba ubah filter pencarian, kategori, atau warna karung. Anda juga bisa setel ulang filter untuk melihat semua produk lagi.
+                    </p>
+                    <a href="{{ $basePath }}" class="mt-4 inline-flex items-center rounded-lg bg-emerald-700 px-4 py-2 text-sm font-semibold text-white transition hover:bg-emerald-600">
+                        Setel ulang filter
+                    </a>
+                </div>
+                <div id="products-grid" class="{{ $products->count() === 0 ? 'hidden ' : '' }}grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                    @foreach($products as $product)
+                        <a
+                            href="{{ route('products.show', $product->id) }}?returnTo={{ urlencode(request()->fullUrl()) }}"
+                            class="js-product-card catalog-card group relative rounded-2xl border border-slate-200 bg-white p-4 transition hover:-translate-y-0.5 hover:border-emerald-300 hover:shadow-md"
+                            data-product-id="{{ $product->id }}"
+                            data-product-code="{{ $product->code }}"
+                            data-product-name="{{ $product->name }}"
+                            data-product-description="{{ $product->description }}"
+                            data-product-sack-color="{{ $product->sack_color }}"
+                            data-product-category-id="{{ $product->category?->id }}"
+                            data-product-category-name="{{ $product->category?->name }}"
+                            data-product-image="{{ $product->image?->system_path ?? '' }}"
+                            data-product-thumbnail="{{ $product->image?->thumbnail_path ?? '' }}"
+                        >
+                            <div class="flex items-start gap-3">
+                                <div class="relative h-24 w-20 shrink-0 overflow-hidden rounded-lg border border-slate-200 bg-slate-50">
+                                    <div class="catalog-skeleton absolute inset-0"></div>
+                                    <img
+                                        src="{{ $product->image?->thumbnail_path ?? $product->image?->system_path ?? 'https://placehold.co/120x180/e2e8f0/334155?text=No+Image' }}"
+                                        alt="{{ $product->code }}"
+                                        class="h-full w-full object-cover catalog-lazy-image transition-opacity duration-300"
+                                        data-lazy-image
+                                        loading="lazy"
+                                        decoding="async"
+                                        fetchpriority="low"
+                                        width="120"
+                                        height="180"
+                                    >
+                                </div>
+                                <div class="min-w-0 flex-1">
+                                    <p class="text-sm font-semibold tracking-wide text-emerald-700">{{ $product->code }}</p>
+                                    <p class="mt-1 line-clamp-2 text-base font-semibold text-slate-900">{{ $product->name }}</p>
+                                    <div class="mt-2 flex flex-wrap items-center gap-2">
+                                        <x-sack-color-badge :color="$product->sack_color" variant="outline" class="px-2 py-0.5" />
+                                        @if($product->category)
+                                            <span class="rounded-full bg-sky-100 px-2 py-0.5 text-[11px] font-semibold text-sky-800">{{ $product->category->name }}</span>
+                                        @endif
+                                    </div>
+                                    <p class="mt-2 line-clamp-2 text-xs text-slate-600">{{ $product->description }}</p>
+                                </div>
+                            </div>
+                        </a>
+                    @endforeach
+                </div>
+            </div>
+
+            <div id="products-pagination-wrap" class="border-t border-slate-200 bg-slate-50/70 px-4 py-3 sm:px-6">
                 {{ $products->onEachSide(1)->links('vendor.pagination.custom') }}
             </div>
         </div>
@@ -164,6 +176,192 @@
     <script>
         (() => {
             const skeletonFallbackMs = 3400;
+            const form = document.getElementById('products-filter-form');
+            const grid = document.getElementById('products-grid');
+            const emptyState = document.getElementById('products-empty-state');
+            const paginationWrap = document.getElementById('products-pagination-wrap');
+            const offlineNotice = document.getElementById('products-offline-notice');
+            const countBadge = document.getElementById('products-count-badge');
+            const currentFullUrl = @json(request()->fullUrl());
+
+            if (!form || !grid || !emptyState || !paginationWrap || !offlineNotice || !countBadge) {
+                return;
+            }
+
+            const escapeHtml = (value) => String(value ?? '')
+                .replaceAll('&', '&amp;')
+                .replaceAll('<', '&lt;')
+                .replaceAll('>', '&gt;')
+                .replaceAll('"', '&quot;')
+                .replaceAll("'", '&#039;');
+
+            const normalize = (value) => String(value ?? '').trim().toLowerCase();
+            const normalizedUrl = (value) => {
+                if (typeof value !== 'string') return '';
+                const trimmed = value.trim();
+                if (trimmed === '') return '';
+                try {
+                    const parsed = new URL(trimmed, window.location.origin);
+                    if (parsed.origin !== window.location.origin) return '';
+                    return parsed.pathname + parsed.search;
+                } catch (error) {
+                    return '';
+                }
+            };
+
+            const colorLabel = (value) => {
+                const normalized = normalize(value);
+                if (normalized === 'orange' || normalized === 'oranye') return 'Oranye';
+                if (normalized === 'pink' || normalized === 'merah muda') return 'Merah Muda';
+                return String(value ?? '').trim();
+            };
+
+            const colorClasses = (value) => {
+                const normalized = normalize(value);
+                if (normalized === 'orange' || normalized === 'oranye') return 'border-orange-300 bg-orange-50 text-orange-700';
+                if (normalized === 'pink' || normalized === 'merah muda') return 'border-pink-300 bg-pink-50 text-pink-700';
+                return 'border-slate-300 bg-slate-50 text-slate-700';
+            };
+
+            const productLink = (id) => {
+                const path = `/products/${encodeURIComponent(id)}`;
+                return `${path}?returnTo=${encodeURIComponent(currentFullUrl)}`;
+            };
+
+            const toProduct = (raw) => ({
+                id: String(raw.id ?? ''),
+                code: String(raw.code ?? ''),
+                name: String(raw.name ?? ''),
+                description: String(raw.description ?? ''),
+                sack_color: String(raw.sack_color ?? ''),
+                category_id: String(raw.category_id ?? raw.category?.id ?? ''),
+                category_name: String(raw.category_name ?? raw.category?.name ?? ''),
+                image: normalizedUrl(raw.image ?? raw.image_path ?? raw.image?.system_path ?? ''),
+                thumbnail: normalizedUrl(raw.thumbnail ?? raw.thumbnail_path ?? raw.image?.thumbnail_path ?? ''),
+            });
+
+            const domProducts = () => Array.from(document.querySelectorAll('.js-product-card')).map((card) => toProduct({
+                id: card.dataset.productId,
+                code: card.dataset.productCode,
+                name: card.dataset.productName,
+                description: card.dataset.productDescription,
+                sack_color: card.dataset.productSackColor,
+                category_id: card.dataset.productCategoryId,
+                category_name: card.dataset.productCategoryName,
+                image: card.dataset.productImage,
+                thumbnail: card.dataset.productThumbnail,
+            }));
+
+            const loadBootstrapProducts = async () => {
+                try {
+                    const response = await fetch('/pwa/bootstrap-data.json', { cache: 'no-store' });
+                    if (!response.ok) {
+                        throw new Error('Bootstrap fetch failed');
+                    }
+
+                    const payload = await response.json();
+                    if (!Array.isArray(payload?.products)) {
+                        return domProducts();
+                    }
+
+                    return payload.products.map((item) => toProduct(item)).filter((item) => item.id !== '');
+                } catch (error) {
+                    return domProducts();
+                }
+            };
+
+            const sortProducts = (rows, sort) => {
+                const cloned = rows.slice();
+                if (sort === 'latest') {
+                    return cloned.sort((a, b) => Number(b.id) - Number(a.id));
+                }
+                if (sort === 'code_desc') {
+                    return cloned.sort((a, b) => b.code.localeCompare(a.code, 'id', { sensitivity: 'base' }));
+                }
+                if (sort === 'name_asc') {
+                    return cloned.sort((a, b) => a.name.localeCompare(b.name, 'id', { sensitivity: 'base' }));
+                }
+                if (sort === 'name_desc') {
+                    return cloned.sort((a, b) => b.name.localeCompare(a.name, 'id', { sensitivity: 'base' }));
+                }
+
+                return cloned.sort((a, b) => a.code.localeCompare(b.code, 'id', { sensitivity: 'base' }));
+            };
+
+            const renderProducts = (rows) => {
+                if (rows.length === 0) {
+                    grid.innerHTML = '';
+                    grid.classList.add('hidden');
+                    emptyState.classList.remove('hidden');
+                    countBadge.textContent = '0 produk';
+                    return;
+                }
+
+                grid.classList.remove('hidden');
+                emptyState.classList.add('hidden');
+                countBadge.textContent = `${rows.length} produk`;
+
+                grid.innerHTML = rows.map((product) => {
+                    const imageSrc = product.thumbnail || product.image || 'https://placehold.co/120x180/e2e8f0/334155?text=No+Image';
+                    const badgeColor = colorClasses(product.sack_color);
+                    const sackLabel = colorLabel(product.sack_color) || '-';
+                    const categoryBadge = product.category_name
+                        ? `<span class="rounded-full bg-sky-100 px-2 py-0.5 text-[11px] font-semibold text-sky-800">${escapeHtml(product.category_name)}</span>`
+                        : '';
+
+                    return `
+                        <a href="${productLink(product.id)}" class="js-product-card catalog-card group relative rounded-2xl border border-slate-200 bg-white p-4 transition hover:-translate-y-0.5 hover:border-emerald-300 hover:shadow-md is-loaded">
+                            <div class="flex items-start gap-3">
+                                <div class="relative h-24 w-20 shrink-0 overflow-hidden rounded-lg border border-slate-200 bg-slate-50">
+                                    <img src="${escapeHtml(imageSrc)}" alt="${escapeHtml(product.code)}" class="h-full w-full object-cover catalog-lazy-image is-loaded transition-opacity duration-300" loading="lazy" decoding="async" fetchpriority="low" width="120" height="180">
+                                </div>
+                                <div class="min-w-0 flex-1">
+                                    <p class="text-sm font-semibold tracking-wide text-emerald-700">${escapeHtml(product.code)}</p>
+                                    <p class="mt-1 line-clamp-2 text-base font-semibold text-slate-900">${escapeHtml(product.name)}</p>
+                                    <div class="mt-2 flex flex-wrap items-center gap-2">
+                                        <span class="inline-flex items-center rounded-full border px-2 py-0.5 text-[11px] font-semibold ${badgeColor}">${escapeHtml(sackLabel)}</span>
+                                        ${categoryBadge}
+                                    </div>
+                                    <p class="mt-2 line-clamp-2 text-xs text-slate-600">${escapeHtml(product.description)}</p>
+                                </div>
+                            </div>
+                        </a>
+                    `;
+                }).join('');
+            };
+
+            const filterProducts = (rows, formData) => {
+                const query = normalize(formData.get('q'));
+                const category = normalize(formData.get('category'));
+                const sackColor = normalize(formData.get('sackColor'));
+                const sort = normalize(formData.get('sort') || 'code_asc');
+
+                const filtered = rows.filter((product) => {
+                    const inQuery = query === '' || normalize([
+                        product.code,
+                        product.name,
+                        product.description,
+                        product.sack_color,
+                        product.category_name,
+                    ].join(' ')).includes(query);
+
+                    const inCategory = category === '' || normalize(product.category_id) === category;
+                    const inSackColor = sackColor === '' || normalize(product.sack_color) === sackColor;
+                    return inQuery && inCategory && inSackColor;
+                });
+
+                return sortProducts(filtered, sort);
+            };
+
+            const updateOfflineStateBanner = () => {
+                if (navigator.onLine) {
+                    offlineNotice.classList.add('hidden');
+                    return;
+                }
+
+                offlineNotice.classList.remove('hidden');
+            };
+
             const initCardSkeletons = () => {
                 document.querySelectorAll('.js-product-card').forEach((card) => {
                     const image = card.querySelector('[data-lazy-image]');
@@ -189,6 +387,38 @@
             };
 
             initCardSkeletons();
+            updateOfflineStateBanner();
+
+            const runOfflineSearch = async () => {
+                const products = await loadBootstrapProducts();
+                const formData = new FormData(form);
+                const filtered = filterProducts(products, formData);
+                paginationWrap.classList.add('hidden');
+                renderProducts(filtered);
+            };
+
+            form.addEventListener('submit', async (event) => {
+                if (navigator.onLine) {
+                    return;
+                }
+
+                event.preventDefault();
+                await runOfflineSearch();
+            });
+
+            window.addEventListener('offline', async () => {
+                updateOfflineStateBanner();
+                await runOfflineSearch();
+            });
+
+            window.addEventListener('online', () => {
+                offlineNotice.classList.add('hidden');
+                paginationWrap.classList.remove('hidden');
+            });
+
+            if (!navigator.onLine) {
+                runOfflineSearch().catch(() => null);
+            }
         })();
     </script>
 @endpush

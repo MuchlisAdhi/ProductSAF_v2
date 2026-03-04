@@ -19,6 +19,30 @@
 
         <div class="catalog-panel overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm">
             <div class="border-b border-slate-200 bg-slate-50 px-4 py-3 sm:px-6">
+                <h2 class="text-sm font-semibold uppercase tracking-wide text-slate-700">Cari Produk</h2>
+                <p class="text-xs text-slate-600">Saat offline, pencarian menggunakan data cache lokal.</p>
+            </div>
+            <div class="p-4 sm:p-5">
+                <form id="product-detail-search-form" method="GET" action="{{ route('products.index') }}" class="flex flex-col gap-2 sm:flex-row sm:items-center">
+                    <input
+                        id="product-detail-search-input"
+                        type="text"
+                        name="q"
+                        autocomplete="off"
+                        placeholder="Cari kode, nama, deskripsi, warna, kategori..."
+                        class="w-full rounded-xl border border-slate-300 px-3 py-2 text-sm focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-100"
+                    >
+                    <button type="submit" class="inline-flex shrink-0 items-center justify-center rounded-lg bg-emerald-700 px-4 py-2 text-sm font-semibold text-white transition hover:bg-emerald-600">
+                        Cari
+                    </button>
+                </form>
+                <p id="product-detail-search-status" class="mt-2 hidden text-xs font-semibold"></p>
+                <div id="product-detail-search-results" class="mt-3 hidden rounded-2xl border border-slate-200 bg-slate-50 p-3"></div>
+            </div>
+        </div>
+
+        <div class="catalog-panel overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm">
+            <div class="border-b border-slate-200 bg-slate-50 px-4 py-3 sm:px-6">
                 <h2 class="text-sm font-semibold uppercase tracking-wide text-slate-700">Pratinjau Produk</h2>
             </div>
             <div class="p-4 sm:p-5">
@@ -236,6 +260,11 @@
             const relatedPrevButton = document.querySelector('.related-products-prev');
             const relatedNextButton = document.querySelector('.related-products-next');
             const relatedPagination = document.querySelector('.related-products-pagination');
+            const searchForm = document.getElementById('product-detail-search-form');
+            const searchInput = document.getElementById('product-detail-search-input');
+            const searchStatus = document.getElementById('product-detail-search-status');
+            const searchResults = document.getElementById('product-detail-search-results');
+            const currentDetailUrl = @json(request()->fullUrl());
 
             if (!image || !stage || !zoomInButton || !zoomOutButton || !resetButton || !lightboxTrigger || !lightbox || !lightboxStage || !lightboxImage || !lightboxCloseButton || !lightboxZoomInButton || !lightboxZoomOutButton || !lightboxZoomResetButton) return;
 
@@ -392,6 +421,131 @@
             };
 
             initCardSkeletons();
+
+            const escapeHtml = (value) => String(value ?? '')
+                .replaceAll('&', '&amp;')
+                .replaceAll('<', '&lt;')
+                .replaceAll('>', '&gt;')
+                .replaceAll('"', '&quot;')
+                .replaceAll("'", '&#039;');
+            const normalize = (value) => String(value ?? '').trim().toLowerCase();
+            const toLocalPath = (value) => {
+                if (typeof value !== 'string') return '';
+                const trimmed = value.trim();
+                if (trimmed === '') return '';
+                try {
+                    const parsed = new URL(trimmed, window.location.origin);
+                    if (parsed.origin !== window.location.origin) return '';
+                    return parsed.pathname + parsed.search;
+                } catch (error) {
+                    return '';
+                }
+            };
+
+            const loadOfflineProducts = async () => {
+                try {
+                    const response = await fetch('/pwa/bootstrap-data.json', { cache: 'no-store' });
+                    if (!response.ok) {
+                        throw new Error('bootstrap unavailable');
+                    }
+
+                    const payload = await response.json();
+                    if (!Array.isArray(payload?.products)) {
+                        return [];
+                    }
+
+                    return payload.products.map((product) => ({
+                        id: String(product.id ?? ''),
+                        code: String(product.code ?? ''),
+                        name: String(product.name ?? ''),
+                        description: String(product.description ?? ''),
+                        sack_color: String(product.sack_color ?? ''),
+                        category_name: String(product.category?.name ?? ''),
+                        image: toLocalPath(product.image?.thumbnail_path || product.image?.system_path || ''),
+                    })).filter((product) => product.id !== '');
+                } catch (error) {
+                    return [];
+                }
+            };
+
+            const renderOfflineSearchResults = (rows) => {
+                if (!searchResults || !searchStatus) {
+                    return;
+                }
+
+                searchResults.classList.remove('hidden');
+                searchStatus.classList.remove('hidden');
+                searchStatus.className = 'mt-2 text-xs font-semibold text-amber-700';
+
+                if (rows.length === 0) {
+                    searchStatus.textContent = 'Mode offline aktif. Tidak ada produk yang cocok.';
+                    searchResults.innerHTML = '<p class="text-sm text-slate-600">Coba kata kunci lain atau aktifkan koneksi internet.</p>';
+                    return;
+                }
+
+                searchStatus.textContent = `Mode offline aktif. Ditemukan ${rows.length} produk.`;
+                const items = rows.slice(0, 20).map((product) => {
+                    const image = product.image || 'https://placehold.co/120x180/e2e8f0/334155?text=No+Image';
+                    const href = `/products/${encodeURIComponent(product.id)}?returnTo=${encodeURIComponent(currentDetailUrl)}`;
+                    return `
+                        <a href="${href}" class="flex items-start gap-3 rounded-xl border border-slate-200 bg-white p-2.5 transition hover:border-emerald-300 hover:shadow-sm">
+                            <img src="${escapeHtml(image)}" alt="${escapeHtml(product.code)}" class="h-16 w-14 shrink-0 rounded-lg border border-slate-200 object-cover" loading="lazy" decoding="async">
+                            <div class="min-w-0">
+                                <p class="text-xs font-semibold tracking-wide text-emerald-700">${escapeHtml(product.code)}</p>
+                                <p class="line-clamp-2 text-sm font-semibold text-slate-900">${escapeHtml(product.name)}</p>
+                                <p class="line-clamp-1 text-xs text-slate-600">${escapeHtml(product.category_name || product.sack_color || '-')}</p>
+                            </div>
+                        </a>
+                    `;
+                });
+
+                searchResults.innerHTML = `<div class="grid gap-2">${items.join('')}</div>`;
+            };
+
+            if (searchForm && searchInput && searchStatus && searchResults) {
+                searchForm.addEventListener('submit', async (event) => {
+                    const query = searchInput.value.trim();
+                    if (query === '') {
+                        searchResults.classList.add('hidden');
+                        searchStatus.classList.add('hidden');
+                        return;
+                    }
+
+                    if (navigator.onLine) {
+                        return;
+                    }
+
+                    event.preventDefault();
+                    const products = await loadOfflineProducts();
+                    const term = normalize(query);
+                    const filtered = products.filter((product) => normalize([
+                        product.code,
+                        product.name,
+                        product.description,
+                        product.sack_color,
+                        product.category_name,
+                    ].join(' ')).includes(term));
+                    renderOfflineSearchResults(filtered);
+                });
+
+                window.addEventListener('online', () => {
+                    searchStatus.classList.remove('hidden');
+                    searchStatus.className = 'mt-2 text-xs font-semibold text-emerald-700';
+                    searchStatus.textContent = 'Koneksi aktif. Form pencarian akan membuka hasil online.';
+                });
+
+                window.addEventListener('offline', () => {
+                    searchStatus.classList.remove('hidden');
+                    searchStatus.className = 'mt-2 text-xs font-semibold text-amber-700';
+                    searchStatus.textContent = 'Mode offline aktif. Pencarian akan memakai cache lokal.';
+                });
+
+                if (!navigator.onLine) {
+                    searchStatus.classList.remove('hidden');
+                    searchStatus.className = 'mt-2 text-xs font-semibold text-amber-700';
+                    searchStatus.textContent = 'Mode offline aktif. Pencarian akan memakai cache lokal.';
+                }
+            }
 
             const initRelatedProductsCarousel = () => {
                 if (!relatedSwiperRoot || relatedSwiperRoot.dataset.swiperReady === '1') return true;

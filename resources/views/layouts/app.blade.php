@@ -91,6 +91,9 @@
             const trigger = document.getElementById('public-brand-trigger');
             const hiddenButton = document.getElementById('admin-hidden-login');
             if (!trigger || !hiddenButton) return;
+            const currentPath = window.location.pathname.replace(/\/+$/, '') || '/';
+            const triggerPath = new URL(trigger.href, window.location.origin).pathname.replace(/\/+$/, '') || '/';
+            const isHomeTapUnlockContext = currentPath === triggerPath;
 
             const requiredTaps = 7;
             const tapWindowMs = 8000;
@@ -117,7 +120,12 @@
                 }, visibleMs);
             };
 
-            trigger.addEventListener('click', () => {
+            trigger.addEventListener('click', (event) => {
+                if (isHomeTapUnlockContext) {
+                    // On home page, avoid reload so multi-tap counter can reach 7 taps.
+                    event.preventDefault();
+                }
+
                 const now = Date.now();
                 if (firstTapAt === 0 || now - firstTapAt > tapWindowMs) {
                     firstTapAt = now;
