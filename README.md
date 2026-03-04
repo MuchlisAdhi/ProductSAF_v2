@@ -42,6 +42,8 @@ Migrasi aplikasi `MuchlisAdhi/ProductSAF` dari Next.js + Prisma ke Laravel 12 (P
 
 ### 5) Progressive Web App (PWA) + Offline Sync Admin
 - Aplikasi sudah didaftarkan sebagai PWA (`manifest.webmanifest` + `service-worker.js`).
+- Start URL PWA diarahkan ke splash page native: `/splash-screen` (porting desain dari `SplashScreen.tsx`, tanpa `App.tsx`).
+- Font splash sudah self-host (`public/fonts/pwa`) sehingga tidak lagi bergantung ke `fonts.googleapis.com`/`fonts.gstatic.com` saat offline.
 - Disediakan tombol login admin tersembunyi di halaman publik (muncul setelah tap logo brand 7x dalam 8 detik).
 - Saat install PWA, service worker otomatis melakukan bootstrap cache dari `pwa/bootstrap-data.json` berisi:
   - data kategori, produk, nutrisi, dan asset gambar dari database,
@@ -90,6 +92,8 @@ Migrasi aplikasi `MuchlisAdhi/ProductSAF` dari Next.js + Prisma ke Laravel 12 (P
   - `POST /admin/offline-sync/products/{id}/delete` (admin)
 - PWA Bootstrap Data:
   - `GET /pwa/bootstrap-data.json`
+- PWA Splash:
+  - `GET /splash-screen`
 
 ## Struktur Data
 
@@ -186,6 +190,7 @@ php artisan assets:backfill-legacy-images --source="C:\Users\Lenovo\Downloads\up
 2. Buka website dari browser modern (Chrome/Edge Android/Desktop).
 3. Pilih menu `Install App` / `Add to Home Screen`.
 4. Jalankan aplikasi dari shortcut yang terpasang.
+5. Saat aplikasi dibuka dari shortcut, splash `/splash-screen` tampil lebih dulu lalu otomatis lanjut ke beranda.
 
 ### 2) Penggunaan Offline Halaman Publik
 1. Saat install/pertama kali membuka PWA dalam kondisi online, service worker otomatis bootstrap cache data publik dari server.

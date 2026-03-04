@@ -22,7 +22,7 @@ class PwaController extends Controller
             'name' => config('app.name', 'Sidoagung Farm Product Catalog'),
             'short_name' => 'SAF Product',
             'description' => 'Katalog produk Sidoagung Farm dengan dukungan offline.',
-            'start_url' => '/',
+            'start_url' => route('pwa.splash', absolute: false),
             'scope' => '/',
             'display' => 'standalone',
             'orientation' => 'portrait',
@@ -90,11 +90,20 @@ class PwaController extends Controller
     }
 
     /**
+     * PWA launch splash screen page.
+     */
+    public function splash(): View
+    {
+        return view('pwa.splash');
+    }
+
+    /**
      * @return list<string>
      */
     private function buildPrecacheUrls(): array
     {
         $urls = array_merge($this->baseStaticPrecacheUrls(), [
+            route('pwa.splash', absolute: false),
             route('pwa.bootstrap-data', absolute: false),
             '/api/categories',
             '/api/products',
@@ -140,6 +149,7 @@ class PwaController extends Controller
             ->get();
 
         $urls = [
+            route('pwa.splash', absolute: false),
             '/',
             '/products',
             route('pwa.offline', absolute: false),
@@ -255,6 +265,7 @@ class PwaController extends Controller
     private function baseStaticPrecacheUrls(): array
     {
         return [
+            route('pwa.splash', absolute: false),
             '/',
             '/products',
             route('pwa.offline', absolute: false),
@@ -264,6 +275,10 @@ class PwaController extends Controller
             '/images/logo/logo-sidoagung-merah.png',
             '/icons/icon-192.png',
             '/icons/icon-512.png',
+            '/fonts/pwa/Poppins-Light.ttf',
+            '/fonts/pwa/Poppins-Regular.ttf',
+            '/fonts/pwa/Poppins-Bold.ttf',
+            '/fonts/pwa/Oswald-Var.ttf',
             '/images/default-avatar.svg',
             '/images/bg-office.jpeg',
             '/images/bg-silo1.jpeg',
