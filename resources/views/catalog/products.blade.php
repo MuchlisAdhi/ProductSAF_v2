@@ -156,6 +156,8 @@
             </div>
         </div>
     </section>
+
+    @include('partials.whatsapp-floating-button')
 @endsection
 
 @push('scripts')
