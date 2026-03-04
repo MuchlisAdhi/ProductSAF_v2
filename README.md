@@ -195,9 +195,10 @@ php artisan assets:backfill-legacy-images --source="C:\Users\Lenovo\Downloads\up
 ### 2) Penggunaan Offline Halaman Publik
 1. Saat install/pertama kali membuka PWA dalam kondisi online, service worker otomatis bootstrap cache data publik dari server.
 2. Data kategori, produk, detail produk, dan image asset terkait langsung diprefetch ke cache offline.
-3. Saat tanpa sinyal, user bisa langsung mengakses data publik yang sudah dibootstrap.
-4. Jika ada rute di luar daftar bootstrap, aplikasi tampilkan fallback `/offline`.
-5. Ketika koneksi kembali online, service worker otomatis refresh cache dinamis untuk menangkap data kategori/produk terbaru.
+3. Setelah install, buka aplikasi minimal 1 kali dalam kondisi online sampai halaman utama tampil normal (agar warmup cache dinamis selesai).
+4. Saat tanpa sinyal, user bisa langsung mengakses data publik yang sudah dibootstrap.
+5. Jika ada rute di luar daftar bootstrap, aplikasi tampilkan fallback `/offline` (atau fallback darurat HTML jika cache fallback belum sempat tersimpan).
+6. Ketika koneksi kembali online, service worker otomatis refresh cache dinamis untuk menangkap data kategori/produk terbaru.
 
 ### 3) Penggunaan Offline Halaman Admin (Tambah/Ubah/Hapus Kategori & Produk)
 1. Login admin seperti biasa.

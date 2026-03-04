@@ -13,13 +13,14 @@ const DYNAMIC_REFRESH_SYNC_TAG = 'saf-pwa-dynamic-refresh';
 const PERIODIC_REFRESH_SYNC_TAG = 'saf-pwa-periodic-refresh';
 const OFFLINE_SYNC_TAG = 'saf-admin-offline-sync';
 const DYNAMIC_REFRESH_INTERVAL_MS = 5 * 60 * 1000;
+const EMERGENCY_OFFLINE_HTML = '<!doctype html><html lang="id"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Offline</title><style>body{margin:0;font-family:Arial,sans-serif;background:#f1f5f9;color:#0f172a;display:grid;place-items:center;min-height:100vh;padding:16px}main{max-width:520px;background:#fff;border:1px solid #d1d5db;border-radius:12px;padding:20px;box-shadow:0 10px 25px rgba(15,23,42,.08)}h1{margin:0 0 8px;font-size:1.2rem}p{margin:0;color:#475569;line-height:1.5}a{display:inline-block;margin-top:14px;background:#1b5e20;color:#fff;text-decoration:none;padding:10px 14px;border-radius:8px;font-weight:700}</style></head><body><main><h1>Koneksi Internet Tidak Tersedia</h1><p>Halaman belum tersedia offline. Coba lagi saat internet aktif.</p><a href="/">Kembali ke Beranda</a></main></body></html>';
 
 let lastDynamicRefreshAt = 0;
 
 self.addEventListener('install', (event) => {
     event.waitUntil((async () => {
         await cacheStaticPrecache();
-        await refreshDynamicResources({ force: true });
+        await ensureOfflineFallbackCached();
         await self.skipWaiting();
     })());
 });
@@ -34,8 +35,10 @@ self.addEventListener('activate', (event) => {
         );
 
         await self.clients.claim();
-        await refreshDynamicResources({ force: false });
     })());
+
+    // Warm dynamic cache without blocking activation lifecycle.
+    refreshDynamicResources({ force: false }).catch(() => null);
 });
 
 self.addEventListener('message', (event) => {
@@ -150,6 +153,32 @@ const cacheStaticPrecache = async () => {
     await cacheUrls(urls);
 };
 
+const ensureOfflineFallbackCached = async () => {
+    const offlinePath = normalizeUrl(OFFLINE_URL);
+    if (!offlinePath) {
+        return;
+    }
+
+    const offlineAbsolute = new URL(offlinePath, self.location.origin).toString();
+    const cache = await caches.open(STATIC_CACHE);
+
+    try {
+        const response = await fetch(new Request(offlineAbsolute, {
+            cache: 'reload',
+            headers: prefetchHeaders,
+        }));
+
+        if (!response.ok) {
+            return;
+        }
+
+        await cache.put(new Request(offlinePath), response.clone());
+        await cache.put(new Request(offlineAbsolute), response.clone());
+    } catch (error) {
+        // Keep install resilient even if fallback prefetch fails once.
+    }
+};
+
 const scheduleDynamicRefresh = async () => {
     const now = Date.now();
     if (now - lastDynamicRefreshAt < DYNAMIC_REFRESH_INTERVAL_MS) {
@@ -238,6 +267,10 @@ const cacheUrls = async (urls) => {
 };
 
 const resolveCacheName = (pathname) => {
+    if (pathname === OFFLINE_URL || pathname === '/offline') {
+        return STATIC_CACHE;
+    }
+
     if (isImagePath(pathname)) {
         return IMAGE_CACHE;
     }
@@ -289,7 +322,7 @@ const cacheFirst = async (request, cacheName) => {
 
         return response;
     } catch (error) {
-        const fallback = await caches.match(OFFLINE_URL);
+        const fallback = await getOfflineFallbackResponse();
         return fallback || new Response('Offline', { status: 503, statusText: 'Offline' });
     }
 };
@@ -312,7 +345,8 @@ const networkFirst = async (request, cacheName, options = {}) => {
         }
 
         if (fallbackToOfflinePage) {
-            return caches.match(OFFLINE_URL) || new Response('Offline', { status: 503, statusText: 'Offline' });
+            const fallback = await getOfflineFallbackResponse();
+            return fallback || buildOfflineDocumentResponse();
         }
 
         return new Response(JSON.stringify({
@@ -368,15 +402,45 @@ const handleNavigate = async (request) => {
             return cachedPage;
         }
 
-        const staticCache = await caches.open(STATIC_CACHE);
-        const fallback = await staticCache.match(OFFLINE_URL);
+        const fallback = await getOfflineFallbackResponse();
         if (fallback) {
             return fallback;
         }
 
-        return new Response('Offline', { status: 503, statusText: 'Offline' });
+        return buildOfflineDocumentResponse();
     }
 };
+
+const getOfflineFallbackResponse = async () => {
+    const offlinePath = normalizeUrl(OFFLINE_URL);
+    if (!offlinePath) {
+        return null;
+    }
+
+    const offlineAbsolute = new URL(offlinePath, self.location.origin).toString();
+    const keys = [
+        new Request(offlinePath),
+        new Request(offlineAbsolute),
+        offlinePath,
+        offlineAbsolute,
+    ];
+
+    for (const key of keys) {
+        const match = await caches.match(key);
+        if (match) {
+            return match;
+        }
+    }
+
+    return null;
+};
+
+const buildOfflineDocumentResponse = () => new Response(EMERGENCY_OFFLINE_HTML, {
+    status: 200,
+    headers: {
+        'Content-Type': 'text/html; charset=UTF-8',
+    },
+});
 
 const notifyClientsOfflineSync = async () => {
     const clients = await self.clients.matchAll({
