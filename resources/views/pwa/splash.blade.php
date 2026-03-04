@@ -352,6 +352,7 @@
     <div class="bottom-bar"></div>
 </div>
 
+<script src="{{ asset('js/pwa-register.js') }}"></script>
 <script>
     (() => {
         const splash = document.getElementById('saf-splash');

@@ -22,10 +22,14 @@ class PwaController extends Controller
             'name' => config('app.name', 'Sidoagung Farm Product Catalog'),
             'short_name' => 'SAF Product',
             'description' => 'Katalog produk Sidoagung Farm dengan dukungan offline.',
+            'id' => '/?source=pwa',
             'start_url' => route('pwa.splash', absolute: false),
             'scope' => '/',
             'display' => 'standalone',
             'orientation' => 'portrait',
+            'lang' => 'id-ID',
+            'dir' => 'ltr',
+            'categories' => ['business', 'productivity', 'shopping'],
             'background_color' => '#ffffff',
             'theme_color' => '#1b5e20',
             'icons' => [
@@ -42,6 +46,22 @@ class PwaController extends Controller
                     'purpose' => 'any maskable',
                 ],
             ],
+            'screenshots' => [
+                [
+                    'src' => '/images/pwa/screenshot-home.jpeg',
+                    'sizes' => '5472x3648',
+                    'type' => 'image/jpeg',
+                    'form_factor' => 'wide',
+                    'label' => 'Halaman beranda katalog Sidoagung Farm',
+                ],
+                [
+                    'src' => '/images/pwa/screenshot-products.jpeg',
+                    'sizes' => '5472x3648',
+                    'type' => 'image/jpeg',
+                    'form_factor' => 'wide',
+                    'label' => 'Tampilan katalog produk Sidoagung Farm',
+                ],
+            ],
         ], 200, [
             'Content-Type' => 'application/manifest+json; charset=UTF-8',
             'Cache-Control' => 'public, max-age=3600',
@@ -54,8 +74,7 @@ class PwaController extends Controller
     public function serviceWorker(): Response
     {
         $precacheUrls = $this->buildPrecacheUrls();
-        $bootstrapPayload = $this->buildBootstrapPayload();
-        $cacheVersion = $this->buildCacheVersion($precacheUrls, (string) ($bootstrapPayload['version'] ?? ''));
+        $cacheVersion = $this->buildCacheVersion($precacheUrls, $this->buildLightweightBootstrapVersion());
 
         return response()
             ->view('pwa.service-worker', [
@@ -284,6 +303,8 @@ class PwaController extends Controller
             '/images/bg-silo1.jpeg',
             '/images/bg-silo2.jpeg',
             '/images/bg-silo3.jpeg',
+            '/images/pwa/screenshot-home.jpeg',
+            '/images/pwa/screenshot-products.jpeg',
         ];
     }
 
@@ -307,6 +328,18 @@ class PwaController extends Controller
         ];
 
         return substr(sha1(implode('|', $fingerprint)), 0, 24);
+    }
+
+    /**
+     * Build lightweight bootstrap version without loading full payload.
+     */
+    private function buildLightweightBootstrapVersion(): string
+    {
+        return $this->buildBootstrapVersion(
+            Category::query()->count(),
+            Product::query()->count(),
+            Asset::query()->count(),
+        );
     }
 
     /**

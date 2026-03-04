@@ -267,6 +267,31 @@ Referensi:
 - https://marketplace.visualstudio.com/items?itemName=pwabuilder.pwa-studio
 - https://docs.pwabuilder.com/
 
+## Catatan ReportCard PWABuilder
+
+Perbaikan yang sudah diterapkan agar warning utama PWABuilder berkurang:
+- Manifest sudah memiliki `id` stabil: `/?source=pwa`.
+- Manifest sudah menambahkan `screenshots`:
+  - `/images/pwa/screenshot-home.jpeg`
+  - `/images/pwa/screenshot-products.jpeg`
+- Service worker didaftarkan dari halaman publik dan juga halaman start URL `/splash-screen`.
+- Endpoint PWA penting tetap di-allow saat maintenance aktif melalui `public/.htaccess`:
+  - `/manifest.webmanifest`
+  - `/service-worker.js`
+  - `/pwa/bootstrap-data.json`
+  - `/js/pwa-register.js`
+  - `/js/admin-offline-sync.js`
+
+Langkah re-test reportcard:
+1. Pastikan maintenance mode nonaktif (`Turn Off`) sebelum scan.
+2. Deploy perubahan terbaru ke server produksi.
+3. Buka ulang `https://www.pwabuilder.com/reportcard?site=https://www.product.sidoagungfarm.com/`.
+4. Klik `View log` untuk memastikan item warning terbaru.
+
+Catatan:
+- Banyak item pada ReportCard berstatus `optional/info` (misalnya `shortcuts`, `protocol_handlers`, `share_target`, `display_override`, dst) dan tidak wajib untuk publish APK.
+- Fokus minimal agar lolos packaging biasanya: HTTPS valid, manifest valid, icon lengkap, service worker terdeteksi, dan halaman dapat dibuka offline.
+
 ## Verifikasi
 
 ```bash

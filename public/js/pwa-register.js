@@ -3,6 +3,11 @@
         return;
     }
 
+    if (window.__SAF_PWA_REGISTERING__) {
+        return;
+    }
+    window.__SAF_PWA_REGISTERING__ = true;
+
     const DYNAMIC_REFRESH_SYNC_TAG = 'saf-pwa-dynamic-refresh';
 
     const requestDynamicCacheRefresh = async () => {
@@ -53,10 +58,10 @@
         requestDynamicCacheRefresh().catch(() => null);
     });
 
-    if (document.readyState === 'complete') {
+    if (document.readyState !== 'loading') {
         register();
         return;
     }
 
-    window.addEventListener('load', register, { once: true });
+    document.addEventListener('DOMContentLoaded', register, { once: true });
 })();
