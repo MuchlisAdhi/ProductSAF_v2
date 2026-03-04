@@ -42,7 +42,11 @@ Migrasi aplikasi `MuchlisAdhi/ProductSAF` dari Next.js + Prisma ke Laravel 12 (P
 
 ### 5) Progressive Web App (PWA) + Offline Sync Admin
 - Aplikasi sudah didaftarkan sebagai PWA (`manifest.webmanifest` + `service-worker.js`).
-- Halaman publik dan aset utama diprecache, termasuk image produk dari database.
+- Disediakan tombol login admin tersembunyi di halaman publik (muncul setelah tap logo brand 7x dalam 8 detik).
+- Saat install PWA, service worker otomatis melakukan bootstrap cache dari `pwa/bootstrap-data.json` berisi:
+  - data kategori, produk, nutrisi, dan asset gambar dari database,
+  - daftar URL halaman/detail publik dan URL gambar untuk diprefetch.
+- Halaman publik dan aset utama diprecache tanpa user perlu membuka halaman satu per satu.
 - Runtime cache untuk request image publik agar gambar yang sudah pernah dibuka bisa tetap ditampilkan saat offline.
 - Halaman fallback offline: `/offline`.
 - Admin offline queue (IndexedDB) untuk:
@@ -84,6 +88,8 @@ Migrasi aplikasi `MuchlisAdhi/ProductSAF` dari Next.js + Prisma ke Laravel 12 (P
   - `POST /admin/offline-sync/products` (admin)
   - `POST /admin/offline-sync/products/{id}` (admin)
   - `POST /admin/offline-sync/products/{id}/delete` (admin)
+- PWA Bootstrap Data:
+  - `GET /pwa/bootstrap-data.json`
 
 ## Struktur Data
 
@@ -182,16 +188,15 @@ php artisan assets:backfill-legacy-images --source="C:\Users\Lenovo\Downloads\up
 4. Jalankan aplikasi dari shortcut yang terpasang.
 
 ### 2) Penggunaan Offline Halaman Publik
-1. Saat online, buka dulu halaman publik utama:
-   - `/`
-   - `/products`
-   - detail produk/kategori yang sering dipakai.
-2. Service worker akan menyimpan cache halaman dan image yang dibuka.
-3. Saat tanpa sinyal, user tetap bisa membuka konten yang sudah tercache.
-4. Jika halaman belum pernah tercache, aplikasi tampilkan fallback `/offline`.
+1. Saat install/pertama kali membuka PWA dalam kondisi online, service worker otomatis bootstrap cache data publik dari server.
+2. Data kategori, produk, detail produk, dan image asset terkait langsung diprefetch ke cache offline.
+3. Saat tanpa sinyal, user bisa langsung mengakses data publik yang sudah dibootstrap.
+4. Jika ada rute di luar daftar bootstrap, aplikasi tampilkan fallback `/offline`.
+5. Ketika koneksi kembali online, service worker otomatis refresh cache dinamis untuk menangkap data kategori/produk terbaru.
 
 ### 3) Penggunaan Offline Halaman Admin (Tambah/Ubah/Hapus Kategori & Produk)
 1. Login admin seperti biasa.
+   - Opsi cepat dari halaman publik: tap logo brand (header kiri atas) sebanyak `7x` dalam `8 detik`, lalu tombol `Admin Login` akan muncul selama `15 detik`.
 2. Ketika offline, aksi berikut otomatis masuk antrean lokal browser (IndexedDB):
    - `Tambah Kategori`
    - `Ubah Kategori`
@@ -210,6 +215,52 @@ php artisan assets:backfill-legacy-images --source="C:\Users\Lenovo\Downloads\up
 - Untuk kategori yang masih dipakai produk, delete dapat ditolak server saat sinkronisasi.
 - Browser data (cache + IndexedDB) bersifat per-device dan per-browser.
 - Jangan membersihkan cache/storage browser jika antrean offline belum tersinkron.
+
+## Build APK dengan PWABuilder Studio (VSCode)
+
+Prasyarat:
+1. Domain produksi sudah HTTPS dan bisa diakses publik (contoh: `https://product.sidoagungfarm.com`).
+2. Endpoint PWA valid:
+   - `/manifest.webmanifest`
+   - `/service-worker.js`
+   - `/pwa/bootstrap-data.json`
+3. Icon PWA tersedia:
+   - `/icons/icon-192.png`
+   - `/icons/icon-512.png`
+
+Langkah step-by-step:
+1. Pastikan kode terbaru sudah ter-deploy ke server produksi.
+2. Buka VSCode di project ini.
+3. Buka panel PWABuilder Studio:
+   - `View` -> `Extensions` (pastikan extension PWABuilder Studio aktif).
+   - Buka `Command Palette` (`Ctrl + Shift + P`) -> jalankan command PWABuilder Studio (mis. `PWABuilder: Open Studio` / `PWABuilder Studio: Open`).
+4. Masukkan URL produksi PWA:
+   - `https://product.sidoagungfarm.com`
+5. Jalankan proses analisis dan perbaiki warning yang muncul jika ada (manifest, icons, service worker, HTTPS, dsb).
+6. Pilih target package Android (`Android` / `Trusted Web Activity` dari panel PWABuilder Studio).
+7. Isi metadata paket:
+   - `Application Name`
+   - `Package ID` (contoh `com.sidoagung.productsaf`)
+   - `Version Code` dan `Version Name`
+   - Splash screen/icon sesuai kebutuhan.
+8. Generate package Android dari panel PWABuilder Studio.
+9. Pilih mode signing:
+   - Debug signing untuk uji internal, atau
+   - Release signing dengan keystore produksi.
+10. Build dan simpan output APK/AAB ke folder rilis.
+11. Install APK ke perangkat Android dan lakukan uji:
+   - buka aplikasi tanpa internet (data publik tetap muncul),
+   - login admin (termasuk tombol login tersembunyi),
+   - tambah/ubah/hapus kategori/produk saat offline,
+   - aktifkan internet dan pastikan antrean sinkron ke database `product.sidoagungfarm.com`.
+
+Catatan penting untuk Play Store:
+1. Jika menggunakan TWA, siapkan Digital Asset Links (`.well-known/assetlinks.json`) sesuai certificate signing release.
+2. Saat ganti signing key atau package ID, update konfigurasi TWA dan asset links sebelum publish.
+
+Referensi:
+- https://marketplace.visualstudio.com/items?itemName=pwabuilder.pwa-studio
+- https://docs.pwabuilder.com/
 
 ## Verifikasi
 

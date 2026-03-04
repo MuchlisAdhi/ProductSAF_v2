@@ -41,6 +41,15 @@ class TrackPublicVisit
             return false;
         }
 
+        if ($request->headers->get('X-PWA-Prefetch') === '1') {
+            return false;
+        }
+
+        $purpose = Str::lower((string) $request->headers->get('Purpose', ''));
+        if (str_contains($purpose, 'prefetch')) {
+            return false;
+        }
+
         if (! $request->isMethod('GET') || $response->getStatusCode() >= 400) {
             return false;
         }

@@ -7,7 +7,7 @@
     <meta name="theme-color" content="#1b5e20">
     <title>{{ $title ?? 'Sidoagung Farm Admin' }}</title>
     <link rel="manifest" href="{{ route('pwa.manifest') }}">
-    <link rel="apple-touch-icon" href="{{ asset('images/logo/saf-logo.png') }}">
+    <link rel="apple-touch-icon" href="{{ asset('icons/icon-192.png') }}">
     <link rel="icon" href="{{ asset('images/logo/saf-logo-merah.ico') }}" type="image/x-icon">
     <link rel="shortcut icon" href="{{ asset('images/logo/saf-logo-merah.ico') }}" type="image/x-icon">
     <link rel="preconnect" href="https://fonts.googleapis.com">

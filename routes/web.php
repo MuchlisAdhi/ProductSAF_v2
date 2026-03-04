@@ -19,6 +19,7 @@ use Illuminate\Support\Facades\Route;
 
 Route::get('/manifest.webmanifest', [PwaController::class, 'manifest'])->name('pwa.manifest');
 Route::get('/service-worker.js', [PwaController::class, 'serviceWorker'])->name('pwa.service-worker');
+Route::get('/pwa/bootstrap-data.json', [PwaController::class, 'bootstrapData'])->name('pwa.bootstrap-data');
 Route::get('/offline', [PwaController::class, 'offline'])->name('pwa.offline');
 
 Route::middleware('track.public')->group(function (): void {

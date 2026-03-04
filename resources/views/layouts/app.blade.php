@@ -7,7 +7,7 @@
     <meta name="theme-color" content="#1b5e20">
     <title>{{ $title ?? 'Sidoagung Farm Katalog Produk' }}</title>
     <link rel="manifest" href="{{ route('pwa.manifest') }}">
-    <link rel="apple-touch-icon" href="{{ asset('images/logo/saf-logo.png') }}">
+    <link rel="apple-touch-icon" href="{{ asset('icons/icon-192.png') }}">
     <link rel="icon" href="{{ asset('images/logo/saf-logo-merah.ico') }}" type="image/x-icon">
     <link rel="shortcut icon" href="{{ asset('images/logo/saf-logo-merah.ico') }}" type="image/x-icon">
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -24,7 +24,12 @@
             $canAccessAdminNav = in_array($roleValue, ['SUPERADMIN', 'ADMIN'], true);
         @endphp
         <div class="mx-auto flex max-w-6xl flex-col gap-1.5 px-3 py-2 sm:flex-row sm:items-center sm:justify-between sm:px-6">
-            <a href="{{ route('home') }}" class="flex min-w-0 items-center gap-2.5 sm:gap-3.5" aria-label="Sidoagung Farm Home">
+            <a
+                id="public-brand-trigger"
+                href="{{ route('home') }}"
+                class="flex min-w-0 items-center gap-2.5 sm:gap-3.5"
+                aria-label="Sidoagung Farm Home"
+            >
                 <img
                     src="{{ asset('images/logo/saf-logo.png') }}"
                     alt="Logo Sidoagung"
@@ -61,8 +66,66 @@
             &copy; {{ now()->year }} Sidoagung Farm - Katalog Produk
         </div>
     </footer>
+    <a
+        id="admin-hidden-login"
+        href="{{ route('login', ['next' => '/admin']) }}"
+        class="pointer-events-none fixed bottom-4 left-4 z-50 rounded-full border border-emerald-200 bg-white/95 px-3 py-2 text-xs font-semibold text-emerald-800 shadow-lg opacity-0 transition-all duration-300 hover:bg-emerald-50"
+        aria-label="Admin login"
+        title="Admin login"
+    >
+        Admin Login
+    </a>
     <script src="https://cdn.jsdelivr.net/npm/preline@2.5.0/dist/preline.min.js"></script>
     <script src="{{ asset('js/pwa-register.js') }}"></script>
+    <script>
+        (() => {
+            const trigger = document.getElementById('public-brand-trigger');
+            const hiddenButton = document.getElementById('admin-hidden-login');
+            if (!trigger || !hiddenButton) return;
+
+            const requiredTaps = 7;
+            const tapWindowMs = 8000;
+            const visibleMs = 15000;
+            let tapCount = 0;
+            let firstTapAt = 0;
+            let hideTimer = null;
+
+            const hideButton = () => {
+                hiddenButton.classList.add('opacity-0', 'pointer-events-none');
+                hiddenButton.classList.remove('opacity-100');
+            };
+
+            const showButton = () => {
+                hiddenButton.classList.remove('opacity-0', 'pointer-events-none');
+                hiddenButton.classList.add('opacity-100');
+
+                if (hideTimer) {
+                    window.clearTimeout(hideTimer);
+                }
+
+                hideTimer = window.setTimeout(() => {
+                    hideButton();
+                }, visibleMs);
+            };
+
+            trigger.addEventListener('click', () => {
+                const now = Date.now();
+                if (firstTapAt === 0 || now - firstTapAt > tapWindowMs) {
+                    firstTapAt = now;
+                    tapCount = 1;
+                    return;
+                }
+
+                tapCount += 1;
+
+                if (tapCount >= requiredTaps) {
+                    showButton();
+                    tapCount = 0;
+                    firstTapAt = 0;
+                }
+            });
+        })();
+    </script>
     @stack('scripts')
 </body>
 </html>
