@@ -7,6 +7,7 @@
     <meta name="theme-color" content="#1b5e20">
     <title>{{ $title ?? 'Sidoagung Farm Katalog Produk' }}</title>
     <link rel="manifest" href="{{ route('pwa.manifest') }}">
+    <link rel="serviceworker" href="/service-worker.js" scope="/">
     <link rel="apple-touch-icon" href="{{ asset('icons/icon-192.png') }}">
     <link rel="icon" href="{{ asset('images/logo/saf-logo-merah.ico') }}" type="image/x-icon">
     <link rel="shortcut icon" href="{{ asset('images/logo/saf-logo-merah.ico') }}" type="image/x-icon">
@@ -76,6 +77,14 @@
         Admin Login
     </a>
     <script src="https://cdn.jsdelivr.net/npm/preline@2.5.0/dist/preline.min.js"></script>
+    <script>
+        // Keep SW registration visible in HTML for analyzers that don't parse external JS.
+        (() => {
+            if (!('serviceWorker' in navigator)) return;
+            window.__SAF_SW_BOOTSTRAP_INLINE__ = true;
+            navigator.serviceWorker.register('/service-worker.js', { scope: '/' }).catch(() => null);
+        })();
+    </script>
     <script src="{{ asset('js/pwa-register.js') }}"></script>
     <script>
         (() => {

@@ -4,6 +4,7 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
     <meta name="theme-color" content="#1b5e20">
+    <link rel="serviceworker" href="/service-worker.js" scope="/">
     <title>Splash - Sidoagung Farm</title>
     <style>
         @font-face {
@@ -352,6 +353,14 @@
     <div class="bottom-bar"></div>
 </div>
 
+<script>
+    // Keep SW registration visible in HTML for analyzers that don't parse external JS.
+    (() => {
+        if (!('serviceWorker' in navigator)) return;
+        window.__SAF_SW_BOOTSTRAP_INLINE__ = true;
+        navigator.serviceWorker.register('/service-worker.js', { scope: '/' }).catch(() => null);
+    })();
+</script>
 <script src="{{ asset('js/pwa-register.js') }}"></script>
 <script>
     (() => {

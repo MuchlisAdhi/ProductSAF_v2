@@ -287,6 +287,9 @@ Langkah re-test reportcard:
 2. Deploy perubahan terbaru ke server produksi.
 3. Buka ulang `https://www.pwabuilder.com/reportcard?site=https://www.product.sidoagungfarm.com/`.
 4. Klik `View log` untuk memastikan item warning terbaru.
+5. Jika log menampilkan `Fetching from web string cache`, jalankan scan dengan URL cache-buster:
+   - `https://www.pwabuilder.com/reportcard?site=https://www.product.sidoagungfarm.com/?v=20260304`
+6. Untuk kompatibilitas analyzer PWABuilder, registrasi service worker juga ditulis inline di HTML publik dan splash, selain di file `public/js/pwa-register.js`.
 
 Catatan:
 - Banyak item pada ReportCard berstatus `optional/info` (misalnya `shortcuts`, `protocol_handlers`, `share_target`, `display_override`, dst) dan tidak wajib untuk publish APK.
