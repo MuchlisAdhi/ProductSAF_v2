@@ -9,6 +9,34 @@
     window.__SAF_PWA_REGISTERING__ = true;
 
     const DYNAMIC_REFRESH_SYNC_TAG = 'saf-pwa-dynamic-refresh';
+    const PERIODIC_REFRESH_SYNC_TAG = 'saf-pwa-periodic-refresh';
+    const PERIODIC_REFRESH_MIN_INTERVAL_MS = 24 * 60 * 60 * 1000;
+
+    const registerPeriodicRefresh = async (registration) => {
+        try {
+            if (!('periodicSync' in registration)) {
+                return;
+            }
+
+            if (!navigator.permissions || typeof navigator.permissions.query !== 'function') {
+                return;
+            }
+
+            const permissionStatus = await navigator.permissions.query({
+                name: 'periodic-background-sync',
+            });
+
+            if (permissionStatus.state !== 'granted') {
+                return;
+            }
+
+            await registration.periodicSync.register(PERIODIC_REFRESH_SYNC_TAG, {
+                minInterval: PERIODIC_REFRESH_MIN_INTERVAL_MS,
+            });
+        } catch (error) {
+            // Ignore unsupported Periodic Background Sync environments.
+        }
+    };
 
     const requestDynamicCacheRefresh = async () => {
         try {
@@ -20,6 +48,8 @@
             if ('sync' in registration) {
                 await registration.sync.register(DYNAMIC_REFRESH_SYNC_TAG);
             }
+
+            await registerPeriodicRefresh(registration);
         } catch (error) {
             // Ignore unsupported background sync / unavailable registration.
         }

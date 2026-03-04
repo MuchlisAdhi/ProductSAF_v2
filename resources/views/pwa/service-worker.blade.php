@@ -10,6 +10,7 @@ const PRECACHE_URLS = @json($precacheUrls);
 const DYNAMIC_BOOTSTRAP_URL = @json($bootstrapDataUrl);
 const DYNAMIC_VERSION_KEY = '/__pwa_bootstrap_version__';
 const DYNAMIC_REFRESH_SYNC_TAG = 'saf-pwa-dynamic-refresh';
+const PERIODIC_REFRESH_SYNC_TAG = 'saf-pwa-periodic-refresh';
 const OFFLINE_SYNC_TAG = 'saf-admin-offline-sync';
 const DYNAMIC_REFRESH_INTERVAL_MS = 5 * 60 * 1000;
 
@@ -61,6 +62,12 @@ self.addEventListener('sync', (event) => {
     }
 
     if (event.tag === DYNAMIC_REFRESH_SYNC_TAG) {
+        event.waitUntil(refreshDynamicResources({ force: false }));
+    }
+});
+
+self.addEventListener('periodicsync', (event) => {
+    if (event.tag === PERIODIC_REFRESH_SYNC_TAG) {
         event.waitUntil(refreshDynamicResources({ force: false }));
     }
 });

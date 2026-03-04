@@ -294,6 +294,10 @@ Langkah re-test reportcard:
 Catatan:
 - Banyak item pada ReportCard berstatus `optional/info` (misalnya `shortcuts`, `protocol_handlers`, `share_target`, `display_override`, dst) dan tidak wajib untuk publish APK.
 - Fokus minimal agar lolos packaging biasanya: HTTPS valid, manifest valid, icon lengkap, service worker terdeteksi, dan halaman dapat dibuka offline.
+- `Periodic Sync` sekarang diimplementasikan eksplisit dengan:
+  - registrasi `periodicSync.register('saf-pwa-periodic-refresh', { minInterval: 24 jam })` di `public/js/pwa-register.js`
+  - listener `self.addEventListener('periodicsync', ...)` di `service-worker.js`
+- Jika `Offline Support` masih `Failed` dengan error `Puppeteer TargetClosedException/Network.policyUpdated timeout`, itu biasanya false-negative dari mesin analisis PWABuilder (bukan bukti cache offline Anda rusak), karena pengecekan offline-nya crash sebelum verifikasi selesai.
 
 ## Verifikasi
 
