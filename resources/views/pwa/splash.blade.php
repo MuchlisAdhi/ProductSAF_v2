@@ -370,7 +370,7 @@
         const target = @json(request()->query('next', route('home', absolute: false)));
         const minSplashDurationMs = 3200;
         const fadeDurationMs = 700;
-        const warmupTimeoutMs = 30000;
+        const warmupTimeoutMs = 60000;
 
         const resolveTarget = (value) => {
             if (typeof value !== 'string') return fallbackTarget;

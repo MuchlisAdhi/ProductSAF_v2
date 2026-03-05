@@ -11,7 +11,7 @@
     const DYNAMIC_REFRESH_SYNC_TAG = 'saf-pwa-dynamic-refresh';
     const PERIODIC_REFRESH_SYNC_TAG = 'saf-pwa-periodic-refresh';
     const PERIODIC_REFRESH_MIN_INTERVAL_MS = 24 * 60 * 60 * 1000;
-    const PUBLIC_WARMUP_TIMEOUT_MS = 45 * 1000;
+    const PUBLIC_WARMUP_TIMEOUT_MS = 90 * 1000;
     const PUBLIC_WARMUP_MESSAGE_TYPE = 'WARMUP_PUBLIC_CACHE';
     const ANALYZER_UA_PATTERN = /(HeadlessChrome|Puppeteer|PWABuilder)/i;
     let publicWarmupPromise = null;

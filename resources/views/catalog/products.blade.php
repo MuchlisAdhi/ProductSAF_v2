@@ -139,6 +139,7 @@
                                         alt="{{ $product->code }}"
                                         class="h-full w-full object-cover catalog-lazy-image transition-opacity duration-300"
                                         data-lazy-image
+                                        onerror="this.onerror=null;this.src='https://placehold.co/120x180/e2e8f0/334155?text=No+Image';"
                                         loading="lazy"
                                         decoding="async"
                                         fetchpriority="low"
@@ -313,7 +314,7 @@
                         <a href="${productLink(product.id)}" class="js-product-card catalog-card group relative rounded-2xl border border-slate-200 bg-white p-4 transition hover:-translate-y-0.5 hover:border-emerald-300 hover:shadow-md is-loaded">
                             <div class="flex items-start gap-3">
                                 <div class="relative h-24 w-20 shrink-0 overflow-hidden rounded-lg border border-slate-200 bg-slate-50">
-                                    <img src="${escapeHtml(imageSrc)}" alt="${escapeHtml(product.code)}" class="h-full w-full object-cover catalog-lazy-image is-loaded transition-opacity duration-300" loading="lazy" decoding="async" fetchpriority="low" width="120" height="180">
+                                    <img src="${escapeHtml(imageSrc)}" alt="${escapeHtml(product.code)}" class="h-full w-full object-cover catalog-lazy-image is-loaded transition-opacity duration-300" onerror="this.onerror=null;this.src='https://placehold.co/120x180/e2e8f0/334155?text=No+Image';" loading="lazy" decoding="async" fetchpriority="low" width="120" height="180">
                                 </div>
                                 <div class="min-w-0 flex-1">
                                     <p class="text-sm font-semibold tracking-wide text-emerald-700">${escapeHtml(product.code)}</p>

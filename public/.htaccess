@@ -22,6 +22,7 @@
     RewriteCond %{REQUEST_URI} !^/service-worker\.js$ [NC]
     RewriteCond %{REQUEST_URI} !^/pwa/bootstrap-data\.json$ [NC]
     RewriteCond %{REQUEST_URI} !^/offline$ [NC]
+    RewriteCond %{REQUEST_URI} !^/offline-login$ [NC]
     RewriteCond %{REQUEST_URI} !^/splash-screen$ [NC]
     RewriteCond %{REQUEST_URI} !^/js/pwa-register\.js$ [NC]
     RewriteCond %{REQUEST_URI} !^/js/admin-offline-sync\.js$ [NC]

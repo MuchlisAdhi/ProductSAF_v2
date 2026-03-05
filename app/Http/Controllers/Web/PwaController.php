@@ -81,6 +81,7 @@ class PwaController extends Controller
                 'cacheVersion' => $cacheVersion,
                 'precacheUrls' => $precacheUrls,
                 'offlineUrl' => route('pwa.offline', absolute: false),
+                'offlineLoginUrl' => route('pwa.offline-login', absolute: false),
                 'bootstrapDataUrl' => route('pwa.bootstrap-data', absolute: false),
             ], 200)
             ->header('Content-Type', 'application/javascript; charset=UTF-8')
@@ -106,6 +107,14 @@ class PwaController extends Controller
     public function offline(): View
     {
         return view('pwa.offline');
+    }
+
+    /**
+     * Offline fallback page for admin login entry.
+     */
+    public function offlineLogin(): View
+    {
+        return view('pwa.offline-login');
     }
 
     /**
@@ -172,6 +181,8 @@ class PwaController extends Controller
             '/',
             '/products',
             route('pwa.offline', absolute: false),
+            route('pwa.offline-login', absolute: false),
+            route('login', absolute: false),
             '/api/categories',
             '/api/products',
         ];
@@ -288,6 +299,8 @@ class PwaController extends Controller
             '/',
             '/products',
             route('pwa.offline', absolute: false),
+            route('pwa.offline-login', absolute: false),
+            route('login', absolute: false),
             '/favicon.ico',
             '/images/logo/saf-logo.png',
             '/images/logo/saf-logo-merah.ico',

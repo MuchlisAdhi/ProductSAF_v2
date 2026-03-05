@@ -22,6 +22,7 @@ Route::get('/service-worker.js', [PwaController::class, 'serviceWorker'])->name(
 Route::get('/pwa/bootstrap-data.json', [PwaController::class, 'bootstrapData'])->name('pwa.bootstrap-data');
 Route::get('/splash-screen', [PwaController::class, 'splash'])->name('pwa.splash');
 Route::get('/offline', [PwaController::class, 'offline'])->name('pwa.offline');
+Route::get('/offline-login', [PwaController::class, 'offlineLogin'])->name('pwa.offline-login');
 
 Route::middleware('track.public')->group(function (): void {
     Route::get('/', [CatalogController::class, 'home'])->name('home');

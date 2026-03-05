@@ -6,6 +6,7 @@ const IMAGE_CACHE = `${CACHE_VERSION}-images`;
 const DATA_CACHE = `${CACHE_VERSION}-data`;
 
 const OFFLINE_URL = @json($offlineUrl);
+const OFFLINE_LOGIN_URL = @json($offlineLoginUrl);
 const PRECACHE_URLS = @json($precacheUrls);
 const DYNAMIC_BOOTSTRAP_URL = @json($bootstrapDataUrl);
 const DYNAMIC_VERSION_KEY = '/__pwa_bootstrap_version__';
@@ -14,19 +15,43 @@ const DYNAMIC_REFRESH_SYNC_TAG = 'saf-pwa-dynamic-refresh';
 const PERIODIC_REFRESH_SYNC_TAG = 'saf-pwa-periodic-refresh';
 const OFFLINE_SYNC_TAG = 'saf-admin-offline-sync';
 const DYNAMIC_REFRESH_INTERVAL_MS = 5 * 60 * 1000;
+const INSTALL_WARMUP_TIMEOUT_MS = 90 * 1000;
 const DEFAULT_PREFETCH_RETRIES = 2;
 const DEFAULT_PREFETCH_CONCURRENCY = 4;
 const SHELL_FALLBACK_URLS = ['/', '/products', '/splash-screen'];
+const ANALYZER_UA_PATTERN = /(HeadlessChrome|Puppeteer|PWABuilder)/i;
 const EMERGENCY_OFFLINE_HTML = '<!doctype html><html lang="id"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Offline</title><style>body{margin:0;font-family:Arial,sans-serif;background:#f1f5f9;color:#0f172a;display:grid;place-items:center;min-height:100vh;padding:16px}main{max-width:520px;background:#fff;border:1px solid #d1d5db;border-radius:12px;padding:20px;box-shadow:0 10px 25px rgba(15,23,42,.08)}h1{margin:0 0 8px;font-size:1.2rem}p{margin:0;color:#475569;line-height:1.5}a{display:inline-block;margin-top:14px;background:#1b5e20;color:#fff;text-decoration:none;padding:10px 14px;border-radius:8px;font-weight:700}</style></head><body><main><h1>Koneksi Internet Tidak Tersedia</h1><p>Halaman belum tersedia offline. Coba lagi saat internet aktif.</p><a href="/">Kembali ke Beranda</a></main></body></html>';
 
 let lastDynamicRefreshAt = 0;
+const workerUserAgent = (self.navigator && self.navigator.userAgent) ? self.navigator.userAgent : '';
+const isLikelyAnalyzerRuntime = ANALYZER_UA_PATTERN.test(workerUserAgent);
 const wait = (ms) => new Promise((resolve) => {
     setTimeout(resolve, ms);
 });
+const withTimeout = async (promise, timeoutMs) => {
+    let timeoutHandle;
+
+    const timeoutPromise = new Promise((resolve) => {
+        timeoutHandle = setTimeout(() => {
+            resolve(null);
+        }, timeoutMs);
+    });
+
+    try {
+        return await Promise.race([promise, timeoutPromise]);
+    } finally {
+        clearTimeout(timeoutHandle);
+    }
+};
 self.addEventListener('install', (event) => {
     event.waitUntil((async () => {
-        await cacheStaticPrecache();
-        await ensureOfflineFallbackCached();
+        if (isLikelyAnalyzerRuntime) {
+            await cacheStaticPrecache();
+            await ensureOfflineFallbackCached();
+            await ensureOfflineLoginFallbackCached();
+        } else {
+            await withTimeout(warmupPublicCache({ force: true, notify: false }), INSTALL_WARMUP_TIMEOUT_MS);
+        }
         await self.skipWaiting();
     })());
 });
@@ -43,7 +68,9 @@ self.addEventListener('activate', (event) => {
         await self.clients.claim();
     })());
 
-    // Dynamic warmup is triggered by client message to keep SW activation lightweight.
+    if (!isLikelyAnalyzerRuntime) {
+        refreshDynamicResources({ force: false }).catch(() => null);
+    }
 });
 
 self.addEventListener('message', (event) => {
@@ -126,6 +153,7 @@ self.addEventListener('fetch', (event) => {
 const isImagePath = (pathname) => /\.(png|jpg|jpeg|webp|gif|svg|ico)$/i.test(pathname);
 const isStaticAssetPath = (pathname) => pathname.startsWith('/build/') || /\.(css|js|map|woff2?|ttf)$/i.test(pathname);
 const isPublicDataApi = (pathname) => pathname === '/api/categories' || pathname === '/api/products' || pathname.startsWith('/api/products/');
+const isAdminLoginPath = (pathname) => pathname === '/login' || pathname === '/admin' || pathname.startsWith('/admin/');
 
 const normalizeUrl = (value) => {
     if (typeof value !== 'string') {
@@ -185,9 +213,35 @@ const ensureOfflineFallbackCached = async () => {
     }
 };
 
+const ensureOfflineLoginFallbackCached = async () => {
+    const loginFallbackPath = normalizeUrl(OFFLINE_LOGIN_URL);
+    if (!loginFallbackPath) {
+        return;
+    }
+
+    const loginFallbackAbsolute = new URL(loginFallbackPath, self.location.origin).toString();
+    const cache = await caches.open(STATIC_CACHE);
+
+    try {
+        const response = await fetch(new Request(loginFallbackAbsolute, {
+            cache: 'reload',
+        }));
+
+        if (!response.ok) {
+            return;
+        }
+
+        await cache.put(new Request(loginFallbackPath), response.clone());
+        await cache.put(new Request(loginFallbackAbsolute), response.clone());
+    } catch (error) {
+        // Keep install resilient even if offline login prefetch fails once.
+    }
+};
+
 const warmupPublicCache = async ({ force, notify }) => {
     const staticResult = await cacheStaticPrecache();
     await ensureOfflineFallbackCached();
+    await ensureOfflineLoginFallbackCached();
     const dynamicResult = await refreshDynamicResources({ force, notify });
     const completed = Boolean(dynamicResult) && dynamicResult.failed === 0;
 
@@ -362,7 +416,18 @@ const cacheUrls = async (urls, options = {}) => {
         ? Math.max(1, Math.min(6, Number(options.concurrency)))
         : DEFAULT_PREFETCH_CONCURRENCY;
 
-    const queue = uniqueUrls.slice();
+    const priorityWeight = (url) => {
+        if (url === '/' || url === '/products' || url === '/login') return 0;
+        if (url.startsWith('/products/') || url.startsWith('/categories/') || url.startsWith('/api/products/')) return 1;
+        if (url.startsWith('/api/')) return 2;
+        if (isStaticAssetPath(url)) return 3;
+        if (isImagePath(url)) return 4;
+        return 5;
+    };
+
+    const queue = uniqueUrls
+        .slice()
+        .sort((a, b) => priorityWeight(a) - priorityWeight(b));
     const workers = [];
     let success = 0;
     let failed = 0;
@@ -395,7 +460,12 @@ const cacheUrls = async (urls, options = {}) => {
 };
 
 const resolveCacheName = (pathname) => {
-    if (pathname === OFFLINE_URL || pathname === '/offline') {
+    if (
+        pathname === OFFLINE_URL
+        || pathname === '/offline'
+        || pathname === OFFLINE_LOGIN_URL
+        || pathname === '/offline-login'
+    ) {
         return STATIC_CACHE;
     }
 
@@ -551,6 +621,13 @@ const handleNavigate = async (request) => {
         }
 
         const requestUrl = new URL(request.url);
+        if (isAdminLoginPath(requestUrl.pathname)) {
+            const adminFallback = await getAdminLoginFallbackResponse();
+            if (adminFallback) {
+                return adminFallback;
+            }
+        }
+
         const pathOnlyRequest = new Request(requestUrl.pathname);
         const cachedPathOnly = await pageCache.match(pathOnlyRequest) || await caches.match(requestUrl.pathname);
         if (cachedPathOnly) {
@@ -583,6 +660,30 @@ const getOfflineFallbackResponse = async () => {
         new Request(offlineAbsolute),
         offlinePath,
         offlineAbsolute,
+    ];
+
+    for (const key of keys) {
+        const match = await caches.match(key);
+        if (match) {
+            return match;
+        }
+    }
+
+    return null;
+};
+
+const getAdminLoginFallbackResponse = async () => {
+    const loginFallbackPath = normalizeUrl(OFFLINE_LOGIN_URL);
+    if (!loginFallbackPath) {
+        return null;
+    }
+
+    const loginFallbackAbsolute = new URL(loginFallbackPath, self.location.origin).toString();
+    const keys = [
+        new Request(loginFallbackPath),
+        new Request(loginFallbackAbsolute),
+        loginFallbackPath,
+        loginFallbackAbsolute,
     ];
 
     for (const key of keys) {
