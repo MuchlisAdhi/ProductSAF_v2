@@ -67,15 +67,36 @@
             &copy; {{ now()->year }} Sidoagung Farm - Katalog Produk
         </div>
     </footer>
-    <a
-        id="admin-hidden-login"
-        href="{{ route('login', ['next' => '/admin']) }}"
-        class="pointer-events-none fixed bottom-4 left-4 z-50 rounded-full border border-emerald-200 bg-white/95 px-3 py-2 text-xs font-semibold text-emerald-800 shadow-lg opacity-0 transition-all duration-300 hover:bg-emerald-50"
-        aria-label="Admin login"
-        title="Admin login"
+    <div
+        id="admin-hidden-login-menu"
+        class="pointer-events-none fixed inset-0 z-[90] opacity-0 transition duration-200"
+        aria-hidden="true"
     >
-        Admin Login
-    </a>
+        <div id="admin-hidden-login-backdrop" class="absolute inset-0 bg-slate-900/40"></div>
+        <div class="absolute inset-x-0 bottom-0 p-3 sm:p-4">
+            <div class="mx-auto w-full max-w-md rounded-2xl border border-slate-200 bg-white p-4 shadow-2xl">
+                <div class="mb-3 flex items-center justify-between">
+                    <p class="text-sm font-semibold text-slate-900">Menu Admin</p>
+                    <button
+                        id="admin-hidden-login-close"
+                        type="button"
+                        class="rounded-lg px-2 py-1 text-xs font-semibold text-slate-600 transition hover:bg-slate-100 hover:text-slate-900"
+                        aria-label="Tutup menu admin"
+                    >
+                        Tutup
+                    </button>
+                </div>
+                <p class="mb-3 text-xs text-slate-600">Akses form login untuk kelola kategori dan produk.</p>
+                <a
+                    id="admin-hidden-login-link"
+                    href="{{ route('login', ['next' => '/admin']) }}"
+                    class="inline-flex w-full items-center justify-center rounded-xl bg-emerald-700 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-emerald-600"
+                >
+                    Login Admin
+                </a>
+            </div>
+        </div>
+    </div>
     <script src="https://cdn.jsdelivr.net/npm/preline@2.5.0/dist/preline.min.js"></script>
     <script>
         // Keep SW registration visible in HTML for analyzers that don't parse external JS.
@@ -89,35 +110,37 @@
     <script>
         (() => {
             const trigger = document.getElementById('public-brand-trigger');
-            const hiddenButton = document.getElementById('admin-hidden-login');
-            if (!trigger || !hiddenButton) return;
+            const hiddenMenu = document.getElementById('admin-hidden-login-menu');
+            const hiddenMenuBackdrop = document.getElementById('admin-hidden-login-backdrop');
+            const hiddenMenuClose = document.getElementById('admin-hidden-login-close');
+            const hiddenMenuLink = document.getElementById('admin-hidden-login-link');
+            if (!trigger || !hiddenMenu || !hiddenMenuBackdrop || !hiddenMenuClose || !hiddenMenuLink) return;
             const currentPath = window.location.pathname.replace(/\/+$/, '') || '/';
             const triggerPath = new URL(trigger.href, window.location.origin).pathname.replace(/\/+$/, '') || '/';
             const isHomeTapUnlockContext = currentPath === triggerPath;
 
             const requiredTaps = 7;
             const tapWindowMs = 8000;
-            const visibleMs = 15000;
+            const desktopMedia = '(min-width: 768px)';
             let tapCount = 0;
             let firstTapAt = 0;
-            let hideTimer = null;
+            let bodyOverflowBeforeMenu = '';
 
-            const hideButton = () => {
-                hiddenButton.classList.add('opacity-0', 'pointer-events-none');
-                hiddenButton.classList.remove('opacity-100');
+            const isDesktop = () => window.matchMedia(desktopMedia).matches;
+
+            const closeMenu = () => {
+                hiddenMenu.classList.add('opacity-0', 'pointer-events-none');
+                hiddenMenu.classList.remove('opacity-100');
+                hiddenMenu.setAttribute('aria-hidden', 'true');
+                document.body.style.overflow = bodyOverflowBeforeMenu;
             };
 
-            const showButton = () => {
-                hiddenButton.classList.remove('opacity-0', 'pointer-events-none');
-                hiddenButton.classList.add('opacity-100');
-
-                if (hideTimer) {
-                    window.clearTimeout(hideTimer);
-                }
-
-                hideTimer = window.setTimeout(() => {
-                    hideButton();
-                }, visibleMs);
+            const openMenu = () => {
+                bodyOverflowBeforeMenu = document.body.style.overflow;
+                document.body.style.overflow = 'hidden';
+                hiddenMenu.classList.remove('opacity-0', 'pointer-events-none');
+                hiddenMenu.classList.add('opacity-100');
+                hiddenMenu.setAttribute('aria-hidden', 'false');
             };
 
             trigger.addEventListener('click', (event) => {
@@ -136,9 +159,23 @@
                 tapCount += 1;
 
                 if (tapCount >= requiredTaps) {
-                    showButton();
+                    if (isDesktop()) {
+                        window.location.assign(hiddenMenuLink.href);
+                    } else {
+                        openMenu();
+                    }
                     tapCount = 0;
                     firstTapAt = 0;
+                }
+            });
+
+            hiddenMenuBackdrop.addEventListener('click', closeMenu);
+            hiddenMenuClose.addEventListener('click', closeMenu);
+            hiddenMenuLink.addEventListener('click', closeMenu);
+
+            window.addEventListener('keydown', (event) => {
+                if (event.key === 'Escape' && hiddenMenu.getAttribute('aria-hidden') === 'false') {
+                    closeMenu();
                 }
             });
         })();
