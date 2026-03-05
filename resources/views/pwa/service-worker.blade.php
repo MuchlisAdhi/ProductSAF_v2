@@ -440,6 +440,8 @@ const cacheUrls = async (urls, options = {}) => {
 
     const priorityWeight = (url) => {
         if (url === '/' || url === '/products' || url.startsWith('/login')) return 0;
+        if (url.startsWith('/admin')) return 0;
+        if (url.startsWith('/products?category=')) return 0;
         if (url.startsWith('/products/') || url.startsWith('/categories/') || url.startsWith('/api/products/')) return 1;
         if (url.startsWith('/api/')) return 2;
         if (isStaticAssetPath(url)) return 3;
@@ -666,6 +668,11 @@ const handleNavigate = async (request) => {
             return cachedPathOnly;
         }
 
+        const categoryFallback = await getCategoryRouteFallbackResponse(requestUrl);
+        if (categoryFallback) {
+            return categoryFallback;
+        }
+
         const shellFallback = await getShellFallbackResponse();
         if (shellFallback) {
             return shellFallback;
@@ -698,6 +705,40 @@ const getOfflineFallbackResponse = async () => {
         const match = await caches.match(key);
         if (match) {
             return match;
+        }
+    }
+
+    return null;
+};
+
+const getCategoryRouteFallbackResponse = async (requestUrl) => {
+    const match = requestUrl.pathname.match(/^\/categories\/([^/?#]+)/i);
+    if (!match || !match[1]) {
+        return null;
+    }
+
+    const categoryId = String(match[1]).trim();
+    if (categoryId === '') {
+        return null;
+    }
+
+    const mappedProductsPath = `/products?category=${encodeURIComponent(categoryId)}`;
+    const mappedProductsAbsolute = new URL(mappedProductsPath, self.location.origin).toString();
+    const keys = [
+        new Request(requestUrl.pathname),
+        requestUrl.pathname,
+        new Request(requestUrl.toString()),
+        requestUrl.toString(),
+        new Request(mappedProductsPath),
+        mappedProductsPath,
+        new Request(mappedProductsAbsolute),
+        mappedProductsAbsolute,
+    ];
+
+    for (const key of keys) {
+        const matchResponse = await caches.match(key, { ignoreSearch: false });
+        if (matchResponse) {
+            return matchResponse;
         }
     }
 

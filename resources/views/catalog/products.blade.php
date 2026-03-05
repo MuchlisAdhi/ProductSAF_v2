@@ -191,6 +191,19 @@
             const pageSizeSelect = form.querySelector('select[name="pageSize"]');
             const pageInput = form.querySelector('input[name="page"]');
             const currentFullUrl = @json(request()->fullUrl());
+            const basePath = @json($basePath);
+            const enforcedCategoryId = (() => {
+                const match = String(basePath || '').match(/^\/categories\/([^/?#]+)/i);
+                if (!match || !match[1]) {
+                    return '';
+                }
+
+                try {
+                    return decodeURIComponent(match[1]).trim();
+                } catch (error) {
+                    return String(match[1]).trim();
+                }
+            })();
 
             if (!form || !grid || !emptyState || !paginationWrap || !serverPagination || !offlinePagination || !offlineNotice || !countBadge || !pageSizeSelect || !pageInput) {
                 return;
@@ -343,6 +356,7 @@
                 const category = normalize(formData.get('category'));
                 const sackColor = normalize(formData.get('sackColor'));
                 const sort = normalize(formData.get('sort') || 'code_asc');
+                const routeCategory = normalize(enforcedCategoryId);
 
                 const filtered = rows.filter((product) => {
                     const inQuery = query === '' || normalize([
@@ -354,8 +368,9 @@
                     ].join(' ')).includes(query);
 
                     const inCategory = category === '' || normalize(product.category_id) === category;
+                    const inRouteCategory = routeCategory === '' || normalize(product.category_id) === routeCategory;
                     const inSackColor = sackColor === '' || normalize(product.sack_color) === sackColor;
-                    return inQuery && inCategory && inSackColor;
+                    return inQuery && inCategory && inRouteCategory && inSackColor;
                 });
 
                 return sortProducts(filtered, sort);

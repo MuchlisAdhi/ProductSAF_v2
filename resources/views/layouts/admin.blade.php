@@ -156,6 +156,57 @@
                 padding: 1rem 0.85rem 0.75rem;
             }
         }
+
+        @media (max-width: 767.98px) {
+            .admin-content {
+                padding: 0.85rem 0.65rem 0.65rem;
+            }
+
+            .admin-topbar {
+                border-radius: 0.75rem !important;
+                padding: 0.45rem 0.65rem !important;
+            }
+
+            .admin-topbar .dropdown-menu {
+                width: min(92vw, 320px);
+                max-width: 92vw;
+            }
+
+            .admin-topbar .dropdown-item {
+                white-space: normal;
+            }
+
+            .admin-content .card-header,
+            .admin-content .card-body,
+            .admin-content .card-footer {
+                padding: 0.75rem;
+            }
+
+            .admin-content .card-header.d-flex,
+            .admin-content .card-footer.d-flex {
+                gap: 0.55rem;
+                flex-wrap: wrap;
+            }
+
+            .admin-content .table {
+                font-size: 0.82rem;
+            }
+
+            .admin-content .table > :not(caption) > * > * {
+                padding: 0.56rem 0.62rem;
+            }
+
+            .admin-content .pagination {
+                justify-content: center;
+                flex-wrap: wrap;
+                gap: 0.25rem;
+            }
+
+            .admin-content .pagination .page-link {
+                font-size: 0.78rem;
+                padding: 0.35rem 0.58rem;
+            }
+        }
     </style>
     @stack('head')
 </head>
@@ -217,7 +268,7 @@
         </div>
     </nav>
 
-    <div class="offcanvas offcanvas-start bg-gray-800 text-white d-lg-none" tabindex="-1" id="sidebarMenuMobile" aria-labelledby="sidebarMenuMobileLabel" style="width: 300px;">
+    <div class="offcanvas offcanvas-start bg-gray-800 text-white d-lg-none" tabindex="-1" id="sidebarMenuMobile" aria-labelledby="sidebarMenuMobileLabel" style="width: min(86vw, 300px);">
         <div class="offcanvas-header border-bottom border-secondary">
             <h5 class="offcanvas-title" id="sidebarMenuMobileLabel">Menu Admin</h5>
             <button type="button" class="btn-close btn-close-white" data-bs-dismiss="offcanvas" aria-label="Tutup"></button>
@@ -314,6 +365,35 @@
                     offset: 72,
                 });
             }
+        })();
+    </script>
+    <script>
+        (() => {
+            const wrapTable = (table) => {
+                if (!(table instanceof HTMLElement)) {
+                    return;
+                }
+
+                if (table.closest('.table-responsive')) {
+                    return;
+                }
+
+                const wrapper = document.createElement('div');
+                wrapper.className = 'table-responsive';
+                table.parentNode?.insertBefore(wrapper, table);
+                wrapper.appendChild(table);
+            };
+
+            const init = () => {
+                if (window.innerWidth > 767) {
+                    return;
+                }
+
+                document.querySelectorAll('.admin-content table').forEach((table) => wrapTable(table));
+            };
+
+            init();
+            window.addEventListener('resize', init, { passive: true });
         })();
     </script>
     @stack('scripts')

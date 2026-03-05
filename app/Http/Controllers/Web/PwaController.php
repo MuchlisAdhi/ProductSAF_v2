@@ -187,9 +187,11 @@ class PwaController extends Controller
             '/api/categories',
             '/api/products',
         ];
+        $urls = array_merge($urls, $this->adminShellUrls(), $this->adminAssetUrls());
 
         foreach ($categories as $category) {
             $urls[] = '/categories/'.$category->id;
+            $urls[] = '/products?category='.$category->id;
         }
 
         foreach ($products as $product) {
@@ -295,7 +297,7 @@ class PwaController extends Controller
      */
     private function baseStaticPrecacheUrls(): array
     {
-        return [
+        return array_merge([
             route('pwa.splash', absolute: false),
             '/',
             '/products',
@@ -320,6 +322,48 @@ class PwaController extends Controller
             '/images/bg-silo3.jpeg',
             '/images/pwa/screenshot-home.jpeg',
             '/images/pwa/screenshot-products.jpeg',
+        ], $this->adminShellUrls(), $this->adminAssetUrls());
+    }
+
+    /**
+     * @return list<string>
+     */
+    private function adminShellUrls(): array
+    {
+        return [
+            '/admin',
+            '/admin/products',
+            '/admin/products/new',
+            '/admin/categories',
+            '/admin/categories/new',
+            '/admin/users',
+            '/admin/tracker/summary',
+            '/admin/tracker/visits',
+            '/admin/tracker/users',
+        ];
+    }
+
+    /**
+     * @return list<string>
+     */
+    private function adminAssetUrls(): array
+    {
+        return [
+            '/vendor/volt/vendor/sweetalert2/dist/sweetalert2.min.css',
+            '/vendor/volt/vendor/notyf/notyf.min.css',
+            '/vendor/volt/css/volt.css',
+            '/vendor/volt/vendor/@popperjs/core/dist/umd/popper.min.js',
+            '/vendor/volt/vendor/bootstrap/dist/js/bootstrap.min.js',
+            '/vendor/volt/vendor/onscreen/dist/on-screen.umd.min.js',
+            '/vendor/volt/vendor/nouislider/dist/nouislider.min.js',
+            '/vendor/volt/vendor/smooth-scroll/dist/smooth-scroll.polyfills.min.js',
+            '/vendor/volt/vendor/sweetalert2/dist/sweetalert2.all.min.js',
+            '/vendor/volt/vendor/notyf/notyf.min.js',
+            '/vendor/volt/vendor/simplebar/dist/simplebar.min.js',
+            '/vendor/volt/assets/js/volt.js',
+            '/vendor/volt/assets/img/illustrations/signin.svg',
+            '/js/pwa-register.js',
+            '/js/admin-offline-sync.js',
         ];
     }
 
