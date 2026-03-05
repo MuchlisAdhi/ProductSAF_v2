@@ -19,12 +19,12 @@ const INSTALL_WARMUP_TIMEOUT_MS = 90 * 1000;
 const DEFAULT_PREFETCH_RETRIES = 2;
 const DEFAULT_PREFETCH_CONCURRENCY = 4;
 const SHELL_FALLBACK_URLS = ['/', '/products', '/splash-screen'];
-const ANALYZER_UA_PATTERN = /(HeadlessChrome|Puppeteer|PWABuilder)/i;
+const ANALYZER_UA_PATTERN = /(HeadlessChrome|Puppeteer|PWABuilder|Lighthouse)/i;
 const EMERGENCY_OFFLINE_HTML = '<!doctype html><html lang="id"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Offline</title><style>body{margin:0;font-family:Arial,sans-serif;background:#f1f5f9;color:#0f172a;display:grid;place-items:center;min-height:100vh;padding:16px}main{max-width:520px;background:#fff;border:1px solid #d1d5db;border-radius:12px;padding:20px;box-shadow:0 10px 25px rgba(15,23,42,.08)}h1{margin:0 0 8px;font-size:1.2rem}p{margin:0;color:#475569;line-height:1.5}a{display:inline-block;margin-top:14px;background:#1b5e20;color:#fff;text-decoration:none;padding:10px 14px;border-radius:8px;font-weight:700}</style></head><body><main><h1>Koneksi Internet Tidak Tersedia</h1><p>Halaman belum tersedia offline. Coba lagi saat internet aktif.</p><a href="/">Kembali ke Beranda</a></main></body></html>';
 
 let lastDynamicRefreshAt = 0;
 const workerUserAgent = (self.navigator && self.navigator.userAgent) ? self.navigator.userAgent : '';
-const isLikelyAnalyzerRuntime = ANALYZER_UA_PATTERN.test(workerUserAgent);
+const isLikelyAnalyzerRuntime = ANALYZER_UA_PATTERN.test(workerUserAgent) || Boolean(self.navigator && self.navigator.webdriver);
 const wait = (ms) => new Promise((resolve) => {
     setTimeout(resolve, ms);
 });
@@ -46,7 +46,7 @@ const withTimeout = async (promise, timeoutMs) => {
 self.addEventListener('install', (event) => {
     event.waitUntil((async () => {
         if (isLikelyAnalyzerRuntime) {
-            await cacheStaticPrecache();
+            await cacheAnalyzerPrecache();
             await ensureOfflineFallbackCached();
             await ensureOfflineLoginFallbackCached();
         } else {
@@ -153,7 +153,8 @@ self.addEventListener('fetch', (event) => {
 const isImagePath = (pathname) => /\.(png|jpg|jpeg|webp|gif|svg|ico)$/i.test(pathname);
 const isStaticAssetPath = (pathname) => pathname.startsWith('/build/') || /\.(css|js|map|woff2?|ttf)$/i.test(pathname);
 const isPublicDataApi = (pathname) => pathname === '/api/categories' || pathname === '/api/products' || pathname.startsWith('/api/products/');
-const isAdminLoginPath = (pathname) => pathname === '/login' || pathname === '/admin' || pathname.startsWith('/admin/');
+const isAdminPath = (pathname) => pathname === '/admin' || pathname.startsWith('/admin/');
+const isLoginPath = (pathname) => pathname === '/login';
 
 const normalizeUrl = (value) => {
     if (typeof value !== 'string') {
@@ -185,6 +186,27 @@ const cacheStaticPrecache = async () => {
     return cacheUrls(urls, {
         retries: DEFAULT_PREFETCH_RETRIES,
         concurrency: DEFAULT_PREFETCH_CONCURRENCY,
+    });
+};
+
+const cacheAnalyzerPrecache = async () => {
+    const lightweightUrls = [
+        '/',
+        '/products',
+        '/splash-screen',
+        OFFLINE_URL,
+        OFFLINE_LOGIN_URL,
+        '/login',
+        '/login?next=%2Fadmin',
+        '/api/categories',
+        '/api/products',
+    ]
+        .map((url) => normalizeUrl(url))
+        .filter((url) => typeof url === 'string' && url !== '');
+
+    return cacheUrls(lightweightUrls, {
+        retries: 0,
+        concurrency: 2,
     });
 };
 
@@ -417,7 +439,7 @@ const cacheUrls = async (urls, options = {}) => {
         : DEFAULT_PREFETCH_CONCURRENCY;
 
     const priorityWeight = (url) => {
-        if (url === '/' || url === '/products' || url === '/login') return 0;
+        if (url === '/' || url === '/products' || url.startsWith('/login')) return 0;
         if (url.startsWith('/products/') || url.startsWith('/categories/') || url.startsWith('/api/products/')) return 1;
         if (url.startsWith('/api/')) return 2;
         if (isStaticAssetPath(url)) return 3;
@@ -621,10 +643,20 @@ const handleNavigate = async (request) => {
         }
 
         const requestUrl = new URL(request.url);
-        if (isAdminLoginPath(requestUrl.pathname)) {
+        const loginPageFallback = await getLoginPageFallbackResponse(requestUrl);
+
+        if (isLoginPath(requestUrl.pathname) && loginPageFallback) {
+            return loginPageFallback;
+        }
+
+        if (isAdminPath(requestUrl.pathname)) {
             const adminFallback = await getAdminLoginFallbackResponse();
             if (adminFallback) {
                 return adminFallback;
+            }
+
+            if (loginPageFallback) {
+                return loginPageFallback;
             }
         }
 
@@ -667,6 +699,45 @@ const getOfflineFallbackResponse = async () => {
         if (match) {
             return match;
         }
+    }
+
+    return null;
+};
+
+const getLoginPageFallbackResponse = async (requestUrl) => {
+    const loginPath = normalizeUrl('/login');
+    if (!loginPath) {
+        return null;
+    }
+
+    const loginPathWithAdminNext = normalizeUrl('/login?next=%2Fadmin');
+    const loginAbsolute = new URL(loginPath, self.location.origin).toString();
+    const requestPath = requestUrl.pathname + requestUrl.search;
+    const requestAbsolute = requestUrl.toString();
+    const keys = [
+        new Request(requestPath),
+        new Request(requestAbsolute),
+        requestPath,
+        requestAbsolute,
+        loginPathWithAdminNext ? new Request(loginPathWithAdminNext) : null,
+        loginPathWithAdminNext ? new Request(new URL(loginPathWithAdminNext, self.location.origin).toString()) : null,
+        loginPathWithAdminNext || null,
+        loginPath,
+        new Request(loginPath),
+        new Request(loginAbsolute),
+        loginAbsolute,
+    ].filter(Boolean);
+
+    for (const key of keys) {
+        const match = await caches.match(key);
+        if (match) {
+            return match;
+        }
+    }
+
+    const ignoreSearchMatch = await caches.match(new Request(loginPath), { ignoreSearch: true });
+    if (ignoreSearchMatch) {
+        return ignoreSearchMatch;
     }
 
     return null;

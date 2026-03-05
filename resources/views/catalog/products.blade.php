@@ -165,7 +165,10 @@
             </div>
 
             <div id="products-pagination-wrap" class="border-t border-slate-200 bg-slate-50/70 px-4 py-3 sm:px-6">
-                {{ $products->onEachSide(1)->links('vendor.pagination.custom') }}
+                <div id="products-server-pagination">
+                    {{ $products->onEachSide(1)->links('vendor.pagination.custom') }}
+                </div>
+                <div id="products-offline-pagination" class="hidden"></div>
             </div>
         </div>
     </section>
@@ -181,11 +184,15 @@
             const grid = document.getElementById('products-grid');
             const emptyState = document.getElementById('products-empty-state');
             const paginationWrap = document.getElementById('products-pagination-wrap');
+            const serverPagination = document.getElementById('products-server-pagination');
+            const offlinePagination = document.getElementById('products-offline-pagination');
             const offlineNotice = document.getElementById('products-offline-notice');
             const countBadge = document.getElementById('products-count-badge');
+            const pageSizeSelect = form.querySelector('select[name="pageSize"]');
+            const pageInput = form.querySelector('input[name="page"]');
             const currentFullUrl = @json(request()->fullUrl());
 
-            if (!form || !grid || !emptyState || !paginationWrap || !offlineNotice || !countBadge) {
+            if (!form || !grid || !emptyState || !paginationWrap || !serverPagination || !offlinePagination || !offlineNotice || !countBadge || !pageSizeSelect || !pageInput) {
                 return;
             }
 
@@ -289,18 +296,18 @@
                 return cloned.sort((a, b) => a.code.localeCompare(b.code, 'id', { sensitivity: 'base' }));
             };
 
-            const renderProducts = (rows) => {
+            const renderProducts = (rows, totalCount = rows.length) => {
                 if (rows.length === 0) {
                     grid.innerHTML = '';
                     grid.classList.add('hidden');
                     emptyState.classList.remove('hidden');
-                    countBadge.textContent = '0 produk';
+                    countBadge.textContent = `${totalCount} produk`;
                     return;
                 }
 
                 grid.classList.remove('hidden');
                 emptyState.classList.add('hidden');
-                countBadge.textContent = `${rows.length} produk`;
+                countBadge.textContent = `${totalCount} produk`;
 
                 grid.innerHTML = rows.map((product) => {
                     const imageSrc = product.thumbnail || product.image || 'https://placehold.co/120x180/e2e8f0/334155?text=No+Image';
@@ -354,6 +361,63 @@
                 return sortProducts(filtered, sort);
             };
 
+            const toPositiveInt = (value, fallback) => {
+                const parsed = Number.parseInt(String(value ?? ''), 10);
+                if (!Number.isFinite(parsed) || parsed <= 0) {
+                    return fallback;
+                }
+
+                return parsed;
+            };
+
+            const buildOfflinePageButton = (label, page, disabled, active = false) => {
+                const baseClass = 'inline-flex min-w-9 items-center justify-center rounded-lg border px-3 py-1.5 text-xs font-semibold transition';
+                if (disabled) {
+                    return `<span class="${baseClass} cursor-not-allowed border-slate-200 bg-slate-100 text-slate-400">${label}</span>`;
+                }
+
+                if (active) {
+                    return `<button type="button" data-offline-page="${page}" class="${baseClass} border-emerald-600 bg-emerald-600 text-white">${label}</button>`;
+                }
+
+                return `<button type="button" data-offline-page="${page}" class="${baseClass} border-slate-300 bg-white text-slate-700 hover:border-emerald-300 hover:text-emerald-700">${label}</button>`;
+            };
+
+            const renderOfflinePagination = ({ totalItems, pageSize, currentPage, totalPages }) => {
+                if (totalItems === 0 || totalPages <= 1) {
+                    offlinePagination.classList.add('hidden');
+                    offlinePagination.innerHTML = '';
+                    return;
+                }
+
+                const pageButtons = [];
+                const maxButtons = 5;
+                let startPage = Math.max(1, currentPage - 2);
+                let endPage = Math.min(totalPages, startPage + maxButtons - 1);
+                startPage = Math.max(1, endPage - maxButtons + 1);
+
+                for (let page = startPage; page <= endPage; page += 1) {
+                    pageButtons.push(buildOfflinePageButton(String(page), page, false, page === currentPage));
+                }
+
+                const startItem = (currentPage - 1) * pageSize + 1;
+                const endItem = Math.min(totalItems, currentPage * pageSize);
+
+                offlinePagination.classList.remove('hidden');
+                offlinePagination.innerHTML = `
+                    <div class="flex flex-wrap items-center justify-between gap-3">
+                        <p class="text-xs font-semibold text-slate-600">
+                            Menampilkan ${startItem}-${endItem} dari ${totalItems} produk (offline)
+                        </p>
+                        <div class="flex flex-wrap items-center gap-1.5">
+                            ${buildOfflinePageButton('Prev', currentPage - 1, currentPage <= 1)}
+                            ${pageButtons.join('')}
+                            ${buildOfflinePageButton('Next', currentPage + 1, currentPage >= totalPages)}
+                        </div>
+                    </div>
+                `;
+            };
+
             const updateOfflineStateBanner = () => {
                 if (navigator.onLine) {
                     offlineNotice.classList.add('hidden');
@@ -394,8 +458,22 @@
                 const products = await loadBootstrapProducts();
                 const formData = new FormData(form);
                 const filtered = filterProducts(products, formData);
-                paginationWrap.classList.add('hidden');
-                renderProducts(filtered);
+                const pageSize = toPositiveInt(formData.get('pageSize'), 12);
+                const requestedPage = toPositiveInt(formData.get('page'), 1);
+                const totalPages = Math.max(1, Math.ceil(filtered.length / pageSize));
+                const currentPage = Math.min(requestedPage, totalPages);
+                const offset = (currentPage - 1) * pageSize;
+                const pageRows = filtered.slice(offset, offset + pageSize);
+
+                pageInput.value = String(currentPage);
+                serverPagination.classList.add('hidden');
+                renderProducts(pageRows, filtered.length);
+                renderOfflinePagination({
+                    totalItems: filtered.length,
+                    pageSize,
+                    currentPage,
+                    totalPages,
+                });
             };
 
             form.addEventListener('submit', async (event) => {
@@ -404,6 +482,37 @@
                 }
 
                 event.preventDefault();
+                pageInput.value = '1';
+                await runOfflineSearch();
+            });
+
+            pageSizeSelect.addEventListener('change', async () => {
+                if (navigator.onLine) {
+                    return;
+                }
+
+                pageInput.value = '1';
+                await runOfflineSearch();
+            });
+
+            paginationWrap.addEventListener('click', async (event) => {
+                if (navigator.onLine) {
+                    return;
+                }
+
+                const target = event.target;
+                if (!(target instanceof HTMLElement)) {
+                    return;
+                }
+
+                const trigger = target.closest('[data-offline-page]');
+                if (!trigger) {
+                    return;
+                }
+
+                event.preventDefault();
+                const nextPage = trigger.getAttribute('data-offline-page');
+                pageInput.value = String(toPositiveInt(nextPage, 1));
                 await runOfflineSearch();
             });
 
@@ -414,7 +523,9 @@
 
             window.addEventListener('online', () => {
                 offlineNotice.classList.add('hidden');
-                paginationWrap.classList.remove('hidden');
+                offlinePagination.classList.add('hidden');
+                offlinePagination.innerHTML = '';
+                serverPagination.classList.remove('hidden');
             });
 
             if (!navigator.onLine) {

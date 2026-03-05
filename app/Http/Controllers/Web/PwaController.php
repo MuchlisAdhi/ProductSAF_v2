@@ -183,6 +183,7 @@ class PwaController extends Controller
             route('pwa.offline', absolute: false),
             route('pwa.offline-login', absolute: false),
             route('login', absolute: false),
+            '/login?next=%2Fadmin',
             '/api/categories',
             '/api/products',
         ];
@@ -301,6 +302,7 @@ class PwaController extends Controller
             route('pwa.offline', absolute: false),
             route('pwa.offline-login', absolute: false),
             route('login', absolute: false),
+            '/login?next=%2Fadmin',
             '/favicon.ico',
             '/images/logo/saf-logo.png',
             '/images/logo/saf-logo-merah.ico',

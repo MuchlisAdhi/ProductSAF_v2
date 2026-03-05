@@ -370,7 +370,7 @@
         const target = @json(request()->query('next', route('home', absolute: false)));
         const minSplashDurationMs = 3200;
         const fadeDurationMs = 700;
-        const warmupTimeoutMs = 60000;
+        const warmupTimeoutMs = 120000;
 
         const resolveTarget = (value) => {
             if (typeof value !== 'string') return fallbackTarget;
@@ -391,10 +391,17 @@
                     loaderLabel.textContent = 'Menyiapkan mode offline...';
                 }
 
-                await window.SafPwa.awaitInitialWarmup({
+                const firstResult = await window.SafPwa.awaitInitialWarmup({
                     force: false,
                     timeoutMs: warmupTimeoutMs,
                 });
+
+                if (!firstResult || firstResult.ok !== true) {
+                    await window.SafPwa.awaitInitialWarmup({
+                        force: true,
+                        timeoutMs: warmupTimeoutMs,
+                    });
+                }
             } catch (error) {
                 // Keep launch resilient if warmup cannot complete in time.
             }
