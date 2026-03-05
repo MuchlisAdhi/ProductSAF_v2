@@ -13,7 +13,10 @@
     const PERIODIC_REFRESH_MIN_INTERVAL_MS = 24 * 60 * 60 * 1000;
     const PUBLIC_WARMUP_TIMEOUT_MS = 45 * 1000;
     const PUBLIC_WARMUP_MESSAGE_TYPE = 'WARMUP_PUBLIC_CACHE';
+    const ANALYZER_UA_PATTERN = /(HeadlessChrome|Puppeteer|PWABuilder)/i;
     let publicWarmupPromise = null;
+    const userAgent = navigator.userAgent || '';
+    const isLikelyAnalyzerRuntime = ANALYZER_UA_PATTERN.test(userAgent);
 
     const ensureStoragePersistence = async () => {
         try {
@@ -72,6 +75,10 @@
     };
 
     const ensurePublicWarmup = async (options = {}) => {
+        if (isLikelyAnalyzerRuntime) {
+            return { ok: false, reason: 'analyzer-runtime' };
+        }
+
         const force = Boolean(options.force);
         if (!force && publicWarmupPromise) {
             return publicWarmupPromise;
@@ -169,14 +176,22 @@
                 });
             });
 
-            await requestDynamicCacheRefresh();
-            ensurePublicWarmup({ force: false }).catch(() => null);
+            if (!isLikelyAnalyzerRuntime) {
+                await requestDynamicCacheRefresh();
+                window.setTimeout(() => {
+                    ensurePublicWarmup({ force: false }).catch(() => null);
+                }, 1200);
+            }
         } catch (error) {
             console.error('Service worker registration failed', error);
         }
     };
 
     window.addEventListener('online', () => {
+        if (isLikelyAnalyzerRuntime) {
+            return;
+        }
+
         requestDynamicCacheRefresh().catch(() => null);
         ensurePublicWarmup({ force: true, timeoutMs: PUBLIC_WARMUP_TIMEOUT_MS }).catch(() => null);
     });

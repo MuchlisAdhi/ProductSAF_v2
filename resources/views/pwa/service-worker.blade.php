@@ -14,7 +14,6 @@ const DYNAMIC_REFRESH_SYNC_TAG = 'saf-pwa-dynamic-refresh';
 const PERIODIC_REFRESH_SYNC_TAG = 'saf-pwa-periodic-refresh';
 const OFFLINE_SYNC_TAG = 'saf-admin-offline-sync';
 const DYNAMIC_REFRESH_INTERVAL_MS = 5 * 60 * 1000;
-const INSTALL_WARMUP_TIMEOUT_MS = 60 * 1000;
 const DEFAULT_PREFETCH_RETRIES = 2;
 const DEFAULT_PREFETCH_CONCURRENCY = 4;
 const SHELL_FALLBACK_URLS = ['/', '/products', '/splash-screen'];
@@ -24,25 +23,10 @@ let lastDynamicRefreshAt = 0;
 const wait = (ms) => new Promise((resolve) => {
     setTimeout(resolve, ms);
 });
-const withTimeout = async (promise, timeoutMs) => {
-    let timeoutHandle;
-
-    const timeoutPromise = new Promise((resolve) => {
-        timeoutHandle = setTimeout(() => {
-            resolve(null);
-        }, timeoutMs);
-    });
-
-    try {
-        return await Promise.race([promise, timeoutPromise]);
-    } finally {
-        clearTimeout(timeoutHandle);
-    }
-};
-
 self.addEventListener('install', (event) => {
     event.waitUntil((async () => {
-        await withTimeout(warmupPublicCache({ force: true, notify: false }), INSTALL_WARMUP_TIMEOUT_MS);
+        await cacheStaticPrecache();
+        await ensureOfflineFallbackCached();
         await self.skipWaiting();
     })());
 });
@@ -59,8 +43,7 @@ self.addEventListener('activate', (event) => {
         await self.clients.claim();
     })());
 
-    // Warm dynamic cache without blocking activation lifecycle.
-    refreshDynamicResources({ force: false }).catch(() => null);
+    // Dynamic warmup is triggered by client message to keep SW activation lightweight.
 });
 
 self.addEventListener('message', (event) => {
@@ -117,7 +100,7 @@ self.addEventListener('fetch', (event) => {
     }
 
     if (request.mode === 'navigate') {
-        event.waitUntil(scheduleDynamicRefresh());
+        scheduleDynamicRefresh().catch(() => null);
         event.respondWith(handleNavigate(request));
         return;
     }
