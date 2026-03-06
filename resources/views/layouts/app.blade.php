@@ -1,11 +1,34 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+    @php
+        $resolvedTitle = trim((string) ($metaTitle ?? $title ?? 'Sidoagung Farm Katalog Produk'));
+        $resolvedDescription = trim((string) ($metaDescription ?? 'Katalog produk PT. Sidoagung Farm.'));
+        $metaImagePath = trim((string) ($metaImage ?? '/images/og/saf-katalog-og.png'));
+        $resolvedImage = str_starts_with($metaImagePath, 'http://') || str_starts_with($metaImagePath, 'https://')
+            ? $metaImagePath
+            : url($metaImagePath);
+        $resolvedUrl = url()->full();
+        $resolvedTwitterCard = trim((string) ($twitterCard ?? 'summary_large_image'));
+    @endphp
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <meta name="theme-color" content="#1b5e20">
-    <title>{{ $title ?? 'Sidoagung Farm Katalog Produk' }}</title>
+    <title>{{ $resolvedTitle }}</title>
+    <meta name="description" content="{{ $resolvedDescription }}">
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="PT. Sidoagung Farm">
+    <meta property="og:title" content="{{ $resolvedTitle }}">
+    <meta property="og:description" content="{{ $resolvedDescription }}">
+    <meta property="og:url" content="{{ $resolvedUrl }}">
+    <meta property="og:image" content="{{ $resolvedImage }}">
+    <meta property="og:image:width" content="1200">
+    <meta property="og:image:height" content="630">
+    <meta name="twitter:card" content="{{ $resolvedTwitterCard }}">
+    <meta name="twitter:title" content="{{ $resolvedTitle }}">
+    <meta name="twitter:description" content="{{ $resolvedDescription }}">
+    <meta name="twitter:image" content="{{ $resolvedImage }}">
     <link rel="manifest" href="{{ route('pwa.manifest') }}">
     <link rel="serviceworker" href="/service-worker.js" scope="/">
     <link rel="apple-touch-icon" href="{{ asset('icons/icon-192.png') }}">
