@@ -183,8 +183,8 @@
 
         h1 {
             margin: 0;
-            font-family: 'Oswald Offline', 'Oswald', 'Arial Narrow Bold', Arial, sans-serif;
-            font-weight: 700;
+            font-family: Anton, Impact, Haettenschweiler, 'Arial Narrow Bold', 'Roboto Condensed', Arial, sans-serif;
+            font-weight: 400;
             font-size: clamp(1.9rem, 6vw, 2.8rem);
             letter-spacing: .06em;
             text-transform: uppercase;
@@ -208,6 +208,7 @@
 
         .tagline {
             margin: 14px 0 0;
+            font-family: 'Kaushan Script', 'Brush Script MT', 'Segoe Script', cursive;
             font-size: .78rem;
             font-weight: 400;
             letter-spacing: .14em;
