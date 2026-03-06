@@ -4,6 +4,7 @@ use App\Http\Middleware\EnsureApiAuthenticated;
 use App\Http\Middleware\ManualMaintenanceMode;
 use App\Http\Middleware\TrackPublicVisit;
 use App\Http\Middleware\EnsureRole;
+use App\Http\Middleware\ForceCanonicalHost;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
@@ -30,6 +31,7 @@ return Application::configure(basePath: dirname(__DIR__))
         ]);
 
         $middleware->web(prepend: [
+            ForceCanonicalHost::class,
             ManualMaintenanceMode::class,
         ]);
 

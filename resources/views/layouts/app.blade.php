@@ -5,10 +5,12 @@
         $resolvedTitle = trim((string) ($metaTitle ?? $title ?? 'PT. Sidoagung Farm'));
         $resolvedDescription = trim((string) ($metaDescription ?? 'Katalog Produk'));
         $metaImagePath = trim((string) ($metaImage ?? '/images/og/saf-katalog-og.png'));
+        $canonicalBaseUrl = rtrim((string) config('app.url', ''), '/');
+        $requestUri = request()->getRequestUri();
+        $resolvedUrl = trim((string) ($metaUrl ?? ($canonicalBaseUrl !== '' ? $canonicalBaseUrl.$requestUri : url()->full())));
         $resolvedImage = str_starts_with($metaImagePath, 'http://') || str_starts_with($metaImagePath, 'https://')
             ? $metaImagePath
-            : url($metaImagePath);
-        $resolvedUrl = url()->full();
+            : ($canonicalBaseUrl !== '' ? $canonicalBaseUrl.'/'.ltrim($metaImagePath, '/') : url($metaImagePath));
         $resolvedTwitterCard = trim((string) ($twitterCard ?? 'summary_large_image'));
     @endphp
     <meta charset="utf-8">
@@ -29,6 +31,7 @@
     <meta name="twitter:title" content="{{ $resolvedTitle }}">
     <meta name="twitter:description" content="{{ $resolvedDescription }}">
     <meta name="twitter:image" content="{{ $resolvedImage }}">
+    <link rel="canonical" href="{{ $resolvedUrl }}">
     <link rel="manifest" href="{{ route('pwa.manifest') }}">
     <link rel="serviceworker" href="/service-worker.js" scope="/">
     <link rel="apple-touch-icon" href="{{ asset('icons/icon-192.png') }}">
