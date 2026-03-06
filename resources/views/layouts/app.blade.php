@@ -2,8 +2,8 @@
 <html lang="en">
 <head>
     @php
-        $resolvedTitle = trim((string) ($metaTitle ?? $title ?? 'Sidoagung Farm Katalog Produk'));
-        $resolvedDescription = trim((string) ($metaDescription ?? 'Katalog produk PT. Sidoagung Farm.'));
+        $resolvedTitle = trim((string) ($metaTitle ?? $title ?? 'PT. Sidoagung Farm'));
+        $resolvedDescription = trim((string) ($metaDescription ?? 'Katalog Produk'));
         $metaImagePath = trim((string) ($metaImage ?? '/images/og/saf-katalog-og.png'));
         $resolvedImage = str_starts_with($metaImagePath, 'http://') || str_starts_with($metaImagePath, 'https://')
             ? $metaImagePath
