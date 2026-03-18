@@ -120,7 +120,7 @@
                     @foreach($products as $product)
                         <a
                             href="{{ route('products.show', $product->id) }}?returnTo={{ urlencode(request()->fullUrl()) }}"
-                            class="js-product-card catalog-card group relative rounded-2xl border border-slate-200 bg-white p-4 transition hover:-translate-y-0.5 hover:border-emerald-300 hover:shadow-md"
+                            class="js-product-card catalog-card catalog-product-card group relative rounded-2xl border border-slate-200 bg-white p-4 sm:p-5 transition hover:-translate-y-0.5 hover:border-emerald-300 hover:shadow-md"
                             data-product-id="{{ $product->id }}"
                             data-product-code="{{ $product->code }}"
                             data-product-name="{{ $product->name }}"
@@ -131,8 +131,8 @@
                             data-product-image="{{ $product->image?->system_path ?? '' }}"
                             data-product-thumbnail="{{ $product->image?->thumbnail_path ?? '' }}"
                         >
-                            <div class="flex items-start gap-3">
-                                <div class="relative h-24 w-20 shrink-0 overflow-hidden rounded-lg border border-slate-200 bg-slate-50">
+                            <div class="catalog-product-body flex items-start gap-3">
+                                <div class="relative h-24 w-20 shrink-0 overflow-hidden rounded-lg border border-slate-200 bg-slate-50 sm:h-28 sm:w-24">
                                     <div class="catalog-skeleton absolute inset-0"></div>
                                     <img
                                         src="{{ $product->image?->thumbnail_path ?? $product->image?->system_path ?? 'https://placehold.co/120x180/e2e8f0/334155?text=No+Image' }}"
@@ -156,8 +156,11 @@
                                             <span class="rounded-full bg-sky-100 px-2 py-0.5 text-[11px] font-semibold text-sky-800">{{ $product->category->name }}</span>
                                         @endif
                                     </div>
-                                    <p class="mt-2 line-clamp-2 text-xs text-slate-600">{{ $product->description }}</p>
+                                    <p class="catalog-product-desc-inline mt-2 text-xs leading-relaxed text-slate-600">{{ $product->description }}</p>
                                 </div>
+                            </div>
+                            <div class="catalog-product-desc">
+                                <p class="catalog-product-desc-text">{{ $product->description }}</p>
                             </div>
                         </a>
                     @endforeach
@@ -331,9 +334,9 @@
                         : '';
 
                     return `
-                        <a href="${productLink(product.id)}" class="js-product-card catalog-card group relative rounded-2xl border border-slate-200 bg-white p-4 transition hover:-translate-y-0.5 hover:border-emerald-300 hover:shadow-md is-loaded">
-                            <div class="flex items-start gap-3">
-                                <div class="relative h-24 w-20 shrink-0 overflow-hidden rounded-lg border border-slate-200 bg-slate-50">
+                        <a href="${productLink(product.id)}" class="js-product-card catalog-card catalog-product-card group relative rounded-2xl border border-slate-200 bg-white p-4 sm:p-5 transition hover:-translate-y-0.5 hover:border-emerald-300 hover:shadow-md is-loaded">
+                            <div class="catalog-product-body flex items-start gap-3">
+                                <div class="relative h-24 w-20 shrink-0 overflow-hidden rounded-lg border border-slate-200 bg-slate-50 sm:h-28 sm:w-24">
                                     <img src="${escapeHtml(imageSrc)}" alt="${escapeHtml(product.code)}" class="h-full w-full object-cover catalog-lazy-image is-loaded transition-opacity duration-300" onerror="this.onerror=null;this.src='https://placehold.co/120x180/e2e8f0/334155?text=No+Image';" loading="lazy" decoding="async" fetchpriority="low" width="120" height="180">
                                 </div>
                                 <div class="min-w-0 flex-1">
@@ -343,8 +346,11 @@
                                         <span class="inline-flex items-center rounded-full border px-2 py-0.5 text-[11px] font-semibold ${badgeColor}">${escapeHtml(sackLabel)}</span>
                                         ${categoryBadge}
                                     </div>
-                                    <p class="mt-2 line-clamp-2 text-xs text-slate-600">${escapeHtml(product.description)}</p>
+                                    <p class="catalog-product-desc-inline mt-2 text-xs leading-relaxed text-slate-600">${escapeHtml(product.description)}</p>
                                 </div>
+                            </div>
+                            <div class="catalog-product-desc">
+                                <p class="catalog-product-desc-text">${escapeHtml(product.description)}</p>
                             </div>
                         </a>
                     `;
