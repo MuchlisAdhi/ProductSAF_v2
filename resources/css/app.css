@@ -159,6 +159,33 @@ html {
         -webkit-line-clamp: 3;
         overflow: hidden;
     }
+
+    .catalog-product-card.is-mobile-expanded .catalog-product-body {
+        margin-bottom: 0.25rem;
+    }
+
+    .catalog-product-card.is-mobile-expanded .catalog-product-desc {
+        display: block;
+        opacity: 1;
+        transform: translateY(0);
+        pointer-events: auto;
+        margin-top: 0.4rem;
+        max-height: 200rem;
+    }
+
+    .catalog-product-card.is-mobile-expanded .catalog-product-desc-inline {
+        display: none;
+    }
+
+    .catalog-product-card.is-mobile-expanded::before {
+        width: 100%;
+        opacity: 1;
+    }
+
+    .catalog-product-card.is-mobile-expanded::after {
+        width: 0;
+        opacity: 0;
+    }
 }
 
 .catalog-skeleton {

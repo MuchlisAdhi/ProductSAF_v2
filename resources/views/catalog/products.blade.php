@@ -448,6 +448,72 @@
                 offlineNotice.classList.remove('hidden');
             };
 
+            const isMobileLikeDevice = () => window.matchMedia('(hover: none), (pointer: coarse)').matches;
+
+            const collapseMobileExpandedCards = (exceptCard = null) => {
+                document.querySelectorAll('.js-product-card.is-mobile-expanded').forEach((card) => {
+                    if (card === exceptCard) {
+                        return;
+                    }
+                    card.classList.remove('is-mobile-expanded');
+                });
+            };
+
+            let hasBoundMobileOutsideClick = false;
+
+            const initMobileCardExpansion = () => {
+                if (!isMobileLikeDevice()) {
+                    collapseMobileExpandedCards();
+                    return;
+                }
+
+                document.querySelectorAll('.js-product-card').forEach((card) => {
+                    if (card.dataset.mobileExpandBound === '1') {
+                        return;
+                    }
+
+                    card.dataset.mobileExpandBound = '1';
+                    card.addEventListener('click', (event) => {
+                        const target = event.target;
+                        if (!(target instanceof HTMLElement)) {
+                            return;
+                        }
+
+                        if (target.closest('button, input, select, textarea, label, [data-offline-page]')) {
+                            return;
+                        }
+
+                        const isExpanded = card.classList.contains('is-mobile-expanded');
+                        if (!isExpanded) {
+                            event.preventDefault();
+                            collapseMobileExpandedCards(card);
+                            card.classList.add('is-mobile-expanded');
+                        }
+                    });
+                });
+
+                if (!hasBoundMobileOutsideClick) {
+                    document.addEventListener('click', (event) => {
+                        if (!isMobileLikeDevice()) {
+                            return;
+                        }
+
+                        const target = event.target;
+                        if (!(target instanceof HTMLElement)) {
+                            return;
+                        }
+
+                        if (target.closest('.js-product-card')) {
+                            return;
+                        }
+
+                        collapseMobileExpandedCards();
+                    }, true);
+
+                    hasBoundMobileOutsideClick = true;
+                }
+            };
+
             const initCardSkeletons = () => {
                 document.querySelectorAll('.js-product-card').forEach((card) => {
                     const image = card.querySelector('[data-lazy-image]');
@@ -473,6 +539,7 @@
             };
 
             initCardSkeletons();
+            initMobileCardExpansion();
             updateOfflineStateBanner();
 
             const runOfflineSearch = async () => {
@@ -489,6 +556,7 @@
                 pageInput.value = String(currentPage);
                 serverPagination.classList.add('hidden');
                 renderProducts(pageRows, filtered.length);
+                initMobileCardExpansion();
                 renderOfflinePagination({
                     totalItems: filtered.length,
                     pageSize,
@@ -547,6 +615,12 @@
                 offlinePagination.classList.add('hidden');
                 offlinePagination.innerHTML = '';
                 serverPagination.classList.remove('hidden');
+            });
+
+            window.addEventListener('resize', () => {
+                if (!isMobileLikeDevice()) {
+                    collapseMobileExpandedCards();
+                }
             });
 
             if (!navigator.onLine) {
