@@ -159,10 +159,7 @@ html {
     }
 
     .catalog-product-desc-inline {
-        display: -webkit-box;
-        -webkit-box-orient: vertical;
-        -webkit-line-clamp: 3;
-        overflow: hidden;
+        display: none;
     }
 
     .catalog-product-card.is-mobile-expanded .catalog-product-body {
