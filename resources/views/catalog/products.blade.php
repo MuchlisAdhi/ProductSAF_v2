@@ -156,11 +156,11 @@
                                             <span class="rounded-full bg-sky-100 px-2 py-0.5 text-[11px] font-semibold text-sky-800">{{ $product->category->name }}</span>
                                         @endif
                                     </div>
-                                    <p class="catalog-product-desc-inline mt-2 text-xs leading-relaxed text-slate-600">{{ $product->description }}</p>
+                                    <p class="catalog-product-desc-inline catalog-text-justify mt-2 text-xs leading-relaxed text-slate-600">{{ $product->description }}</p>
                                 </div>
                             </div>
                             <div class="catalog-product-desc">
-                                <p class="catalog-product-desc-text">{{ $product->description }}</p>
+                                <p class="catalog-product-desc-text catalog-text-justify">{{ $product->description }}</p>
                             </div>
                         </a>
                     @endforeach
@@ -346,11 +346,11 @@
                                         <span class="inline-flex items-center rounded-full border px-2 py-0.5 text-[11px] font-semibold ${badgeColor}">${escapeHtml(sackLabel)}</span>
                                         ${categoryBadge}
                                     </div>
-                                    <p class="catalog-product-desc-inline mt-2 text-xs leading-relaxed text-slate-600">${escapeHtml(product.description)}</p>
+                                    <p class="catalog-product-desc-inline catalog-text-justify mt-2 text-xs leading-relaxed text-slate-600">${escapeHtml(product.description)}</p>
                                 </div>
                             </div>
                             <div class="catalog-product-desc">
-                                <p class="catalog-product-desc-text">${escapeHtml(product.description)}</p>
+                                <p class="catalog-product-desc-text catalog-text-justify">${escapeHtml(product.description)}</p>
                             </div>
                         </a>
                     `;

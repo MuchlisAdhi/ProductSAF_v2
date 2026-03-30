@@ -62,7 +62,7 @@
             </div>
             <div class="p-4 sm:p-5">
                 @if(trim((string) $product->description) !== '')
-                    <p class="mx-auto max-w-3xl whitespace-pre-line text-center text-sm leading-relaxed text-slate-700">{!! nl2br(e($product->description)) !!}</p>
+                    <p class="mx-auto max-w-3xl whitespace-pre-line catalog-text-justify text-sm leading-relaxed text-slate-700">{!! nl2br(e($product->description)) !!}</p>
                 @else
                     <p class="text-center text-sm text-slate-500">Deskripsi produk belum tersedia.</p>
                 @endif
