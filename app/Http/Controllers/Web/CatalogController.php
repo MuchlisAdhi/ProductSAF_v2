@@ -203,35 +203,32 @@ class CatalogController extends Controller
         $safeReturnTo = str_starts_with($returnTo, '/') && ! str_starts_with($returnTo, '//')
             ? $returnTo
             : '';
-        $canonicalBaseUrl = rtrim((string) config('app.share_url', config('app.url', '')), '/');
-        $productPath = route('products.show', ['id' => $product->id], false);
-        $canonicalProductUrl = $canonicalBaseUrl !== ''
-            ? $canonicalBaseUrl.$productPath
-            : route('products.show', ['id' => $product->id]);
-
-        $metaDescriptionSource = trim((string) $product->description);
-        $metaDescription = $metaDescriptionSource !== ''
-            ? Str::limit(preg_replace('/\s+/', ' ', $metaDescriptionSource) ?? $metaDescriptionSource, 180)
-            : 'Detail produk & kandungan nutrisi.';
-        $defaultOgImage = '/images/og/saf-katalog-og.png';
-        $candidateImage = trim((string) ($product->image?->system_path ?? $product->image?->thumbnail_path ?? ''));
-        $candidateImagePath = (string) parse_url($candidateImage, PHP_URL_PATH);
-        $candidateImageExt = strtolower((string) pathinfo($candidateImagePath !== '' ? $candidateImagePath : $candidateImage, PATHINFO_EXTENSION));
-        $supportedOgExtensions = ['jpg', 'jpeg', 'png', 'gif'];
-        $metaImage = in_array($candidateImageExt, $supportedOgExtensions, true)
-            ? $candidateImage
-            : $defaultOgImage;
+        $shareMeta = $this->buildShareMeta($product);
 
         return view('catalog.product-detail', [
             'product' => $product,
             'relatedProducts' => $relatedProducts,
             'backHref' => $safeReturnTo ?: "/categories/{$product->category_id}",
             'backLabel' => $safeReturnTo !== '' ? 'Back to List' : 'Kembali',
-            'metaTitle' => trim($product->code.' '.$product->name).' | PT. Sidoagung Farm',
-            'metaDescription' => $metaDescription,
-            'metaImage' => $metaImage,
-            'metaUrl' => $canonicalProductUrl,
-            'canonicalProductUrl' => $canonicalProductUrl,
+            ...$shareMeta,
+        ]);
+    }
+
+    /**
+     * Lightweight OG page for Facebook crawler and shared links.
+     */
+    public function facebookShare(string $id)
+    {
+        $product = Product::query()
+            ->select(['id', 'code', 'name', 'description', 'image_id'])
+            ->with('image:id,system_path,thumbnail_path')
+            ->findOrFail($id);
+
+        $shareMeta = $this->buildShareMeta($product);
+
+        return view('catalog.product-share', [
+            'product' => $product,
+            ...$shareMeta,
         ]);
     }
 
@@ -268,5 +265,41 @@ class CatalogController extends Controller
             'name_desc' => $builder->orderByDesc('name'),
             default => $builder->orderBy('code'),
         };
+    }
+
+    /**
+     * Build common Open Graph metadata for product links.
+     *
+     * @return array<string, string>
+     */
+    private function buildShareMeta(Product $product): array
+    {
+        $canonicalBaseUrl = rtrim((string) config('app.share_url', config('app.url', '')), '/');
+        $productPath = route('products.show', ['id' => $product->id], false);
+        $canonicalProductUrl = $canonicalBaseUrl !== ''
+            ? $canonicalBaseUrl.$productPath
+            : route('products.show', ['id' => $product->id]);
+
+        $metaDescriptionSource = trim((string) $product->description);
+        $metaDescription = $metaDescriptionSource !== ''
+            ? Str::limit(preg_replace('/\s+/', ' ', $metaDescriptionSource) ?? $metaDescriptionSource, 180)
+            : 'Detail produk & kandungan nutrisi.';
+
+        $defaultOgImage = '/images/og/saf-katalog-og.png';
+        $candidateImage = trim((string) ($product->image?->system_path ?? $product->image?->thumbnail_path ?? ''));
+        $candidateImagePath = (string) parse_url($candidateImage, PHP_URL_PATH);
+        $candidateImageExt = strtolower((string) pathinfo($candidateImagePath !== '' ? $candidateImagePath : $candidateImage, PATHINFO_EXTENSION));
+        $supportedOgExtensions = ['jpg', 'jpeg', 'png', 'gif'];
+        $metaImage = in_array($candidateImageExt, $supportedOgExtensions, true)
+            ? $candidateImage
+            : $defaultOgImage;
+
+        return [
+            'metaTitle' => trim($product->code.' '.$product->name).' | PT. Sidoagung Farm',
+            'metaDescription' => $metaDescription,
+            'metaImage' => $metaImage,
+            'metaUrl' => $canonicalProductUrl,
+            'canonicalProductUrl' => $canonicalProductUrl,
+        ];
     }
 }

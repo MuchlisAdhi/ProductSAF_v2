@@ -28,6 +28,7 @@ Route::middleware('track.public')->group(function (): void {
     Route::get('/', [CatalogController::class, 'home'])->name('home');
     Route::get('/products', [CatalogController::class, 'products'])->name('products.index');
     Route::get('/products/{id}', [CatalogController::class, 'show'])->name('products.show');
+    Route::get('/share/products/{id}', [CatalogController::class, 'facebookShare'])->name('products.share.facebook');
     Route::get('/categories/{id}', [CatalogController::class, 'byCategory'])->name('categories.show');
 });
 

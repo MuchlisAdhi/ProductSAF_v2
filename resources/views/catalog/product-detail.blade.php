@@ -261,7 +261,8 @@
         $shareTitle = trim($product->code.' '.$product->name);
         $shareMessage = 'Lihat produk '.$shareTitle.' di katalog PT. Sidoagung Farm: '.$shareUrl;
         $whatsAppShareUrl = 'https://wa.me/?text='.urlencode($shareMessage);
-        $facebookShareUrl = 'https://www.facebook.com/sharer/sharer.php?u='.urlencode($shareUrl);
+        $facebookTargetUrl = route('products.share.facebook', $product->id);
+        $facebookShareUrl = 'https://www.facebook.com/sharer/sharer.php?u='.urlencode($facebookTargetUrl);
         $shareHost = strtolower((string) parse_url($shareUrl, PHP_URL_HOST));
         $isLocalShareHost = in_array($shareHost, ['localhost', '127.0.0.1', '::1'], true);
     @endphp
