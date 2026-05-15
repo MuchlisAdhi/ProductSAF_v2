@@ -213,7 +213,14 @@ class CatalogController extends Controller
         $metaDescription = $metaDescriptionSource !== ''
             ? Str::limit(preg_replace('/\s+/', ' ', $metaDescriptionSource) ?? $metaDescriptionSource, 180)
             : 'Detail produk & kandungan nutrisi.';
-        $metaImage = trim((string) ($product->image?->system_path ?? $product->image?->thumbnail_path ?? '/images/og/saf-katalog-og.png'));
+        $defaultOgImage = '/images/og/saf-katalog-og.png';
+        $candidateImage = trim((string) ($product->image?->system_path ?? $product->image?->thumbnail_path ?? ''));
+        $candidateImagePath = (string) parse_url($candidateImage, PHP_URL_PATH);
+        $candidateImageExt = strtolower((string) pathinfo($candidateImagePath !== '' ? $candidateImagePath : $candidateImage, PATHINFO_EXTENSION));
+        $supportedOgExtensions = ['jpg', 'jpeg', 'png', 'gif'];
+        $metaImage = in_array($candidateImageExt, $supportedOgExtensions, true)
+            ? $candidateImage
+            : $defaultOgImage;
 
         return view('catalog.product-detail', [
             'product' => $product,

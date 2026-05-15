@@ -11,6 +11,15 @@
         $resolvedImage = str_starts_with($metaImagePath, 'http://') || str_starts_with($metaImagePath, 'https://')
             ? $metaImagePath
             : ($canonicalBaseUrl !== '' ? $canonicalBaseUrl.'/'.ltrim($metaImagePath, '/') : url($metaImagePath));
+        $resolvedImagePath = (string) parse_url($resolvedImage, PHP_URL_PATH);
+        $resolvedImageExt = strtolower((string) pathinfo($resolvedImagePath, PATHINFO_EXTENSION));
+        $resolvedImageMime = match ($resolvedImageExt) {
+            'jpg', 'jpeg' => 'image/jpeg',
+            'png' => 'image/png',
+            'gif' => 'image/gif',
+            'webp' => 'image/webp',
+            default => null,
+        };
         $resolvedTwitterCard = trim((string) ($twitterCard ?? 'summary_large_image'));
     @endphp
     <meta charset="utf-8">
@@ -25,6 +34,10 @@
     <meta property="og:description" content="{{ $resolvedDescription }}">
     <meta property="og:url" content="{{ $resolvedUrl }}">
     <meta property="og:image" content="{{ $resolvedImage }}">
+    <meta property="og:image:secure_url" content="{{ $resolvedImage }}">
+    @if($resolvedImageMime)
+        <meta property="og:image:type" content="{{ $resolvedImageMime }}">
+    @endif
     <meta property="og:image:width" content="1200">
     <meta property="og:image:height" content="630">
     <meta name="twitter:card" content="{{ $resolvedTwitterCard }}">
