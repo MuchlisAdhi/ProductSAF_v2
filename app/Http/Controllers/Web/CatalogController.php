@@ -7,6 +7,7 @@ use App\Models\Category;
 use App\Models\Product;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Str;
 
 class CatalogController extends Controller
 {
@@ -202,12 +203,28 @@ class CatalogController extends Controller
         $safeReturnTo = str_starts_with($returnTo, '/') && ! str_starts_with($returnTo, '//')
             ? $returnTo
             : '';
+        $canonicalBaseUrl = rtrim((string) config('app.share_url', config('app.url', '')), '/');
+        $productPath = route('products.show', ['id' => $product->id], false);
+        $canonicalProductUrl = $canonicalBaseUrl !== ''
+            ? $canonicalBaseUrl.$productPath
+            : route('products.show', ['id' => $product->id]);
+
+        $metaDescriptionSource = trim((string) $product->description);
+        $metaDescription = $metaDescriptionSource !== ''
+            ? Str::limit(preg_replace('/\s+/', ' ', $metaDescriptionSource) ?? $metaDescriptionSource, 180)
+            : 'Detail produk & kandungan nutrisi.';
+        $metaImage = trim((string) ($product->image?->system_path ?? $product->image?->thumbnail_path ?? '/images/og/saf-katalog-og.png'));
 
         return view('catalog.product-detail', [
             'product' => $product,
             'relatedProducts' => $relatedProducts,
             'backHref' => $safeReturnTo ?: "/categories/{$product->category_id}",
             'backLabel' => $safeReturnTo !== '' ? 'Back to List' : 'Kembali',
+            'metaTitle' => trim($product->code.' '.$product->name).' | PT. Sidoagung Farm',
+            'metaDescription' => $metaDescription,
+            'metaImage' => $metaImage,
+            'metaUrl' => $canonicalProductUrl,
+            'canonicalProductUrl' => $canonicalProductUrl,
         ]);
     }
 

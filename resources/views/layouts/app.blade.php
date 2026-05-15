@@ -123,7 +123,6 @@
             </div>
         </div>
     </div>
-    <script src="https://cdn.jsdelivr.net/npm/preline@2.5.0/dist/preline.min.js"></script>
     <script>
         // Keep SW registration visible in HTML for analyzers that don't parse external JS.
         (() => {

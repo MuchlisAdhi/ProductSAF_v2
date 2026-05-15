@@ -54,6 +54,8 @@ return [
 
     'url' => env('APP_URL', 'http://localhost'),
 
+    'share_url' => env('APP_SHARE_URL', env('APP_URL', 'http://localhost')),
+
     'canonical_host' => env(
         'APP_CANONICAL_HOST',
         parse_url((string) env('APP_URL', ''), PHP_URL_HOST) ?: null

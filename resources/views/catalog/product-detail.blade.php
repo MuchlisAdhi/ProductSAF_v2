@@ -1,6 +1,271 @@
 @extends('layouts.app')
 
+@push('head')
+    <style>
+        .product-share-menu {
+            position: relative;
+            display: inline-block;
+            flex: 0 1 auto;
+        }
+
+        .product-preview-toolbar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 0.65rem;
+            flex-wrap: nowrap;
+        }
+
+        .product-zoom-controls {
+            flex: 0 0 auto;
+            margin-left: auto;
+        }
+
+        .product-share-toggle {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.55rem;
+            border: 1px solid rgba(15, 118, 110, 0.24);
+            border-radius: 9999px;
+            padding: 0.62rem 1.1rem;
+            color: #ffffff;
+            font-size: 0.875rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, #0f766e, #059669);
+            box-shadow: 0 10px 22px rgba(5, 150, 105, 0.26);
+            cursor: pointer;
+            list-style: none;
+            user-select: none;
+            white-space: nowrap;
+            transition: transform 0.24s ease, box-shadow 0.24s ease, filter 0.24s ease;
+            animation: product-share-pulse 3s infinite;
+        }
+
+        .product-share-toggle::-webkit-details-marker {
+            display: none;
+        }
+
+        .product-share-toggle:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 14px 26px rgba(5, 150, 105, 0.34);
+            filter: brightness(1.03);
+        }
+
+        .product-share-menu[open] .product-share-toggle {
+            transform: translateY(-1px);
+            box-shadow: 0 12px 24px rgba(5, 150, 105, 0.34);
+        }
+
+        .product-share-tooltip {
+            position: absolute;
+            left: 50%;
+            top: calc(100% + 0.65rem);
+            transform: translateX(-50%) scale(0.95);
+            min-width: 12rem;
+            border-radius: 1rem;
+            border: 1px solid #cbd5e1;
+            padding: 0.85rem;
+            background: rgba(255, 255, 255, 0.98);
+            box-shadow: 0 14px 30px rgba(15, 23, 42, 0.2);
+            opacity: 0;
+            visibility: hidden;
+            pointer-events: none;
+            transition: opacity 0.24s ease, transform 0.24s ease, visibility 0.24s ease;
+            z-index: 12;
+        }
+
+        .product-share-menu[open] .product-share-tooltip {
+            opacity: 1;
+            visibility: visible;
+            pointer-events: auto;
+            transform: translateX(-50%) scale(1);
+        }
+
+        .product-share-tooltip::before {
+            content: "";
+            position: absolute;
+            left: 50%;
+            top: -0.5rem;
+            transform: translateX(-50%) rotate(45deg);
+            width: 1rem;
+            height: 1rem;
+            border-top: 1px solid #cbd5e1;
+            border-left: 1px solid #cbd5e1;
+            background: rgba(255, 255, 255, 0.98);
+        }
+
+        .product-share-icons {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.6rem;
+        }
+
+        .product-share-note {
+            margin-top: 0.5rem;
+            font-size: 0.68rem;
+            text-align: center;
+            color: #64748b;
+            line-height: 1.25;
+        }
+
+        .product-share-icon {
+            width: 2.7rem;
+            height: 2.7rem;
+            border: 0;
+            border-radius: 9999px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            color: #0f172a;
+            background: #f1f5f9;
+            box-shadow: 0 7px 14px rgba(15, 23, 42, 0.14);
+            transition: transform 0.2s ease, box-shadow 0.2s ease, color 0.2s ease;
+        }
+
+        .product-share-icon:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 12px 20px rgba(15, 23, 42, 0.2);
+            color: #ffffff;
+        }
+
+        .product-share-icon--whatsapp:hover {
+            background: linear-gradient(135deg, #25d366, #17b455);
+        }
+
+        .product-share-icon--instagram:hover {
+            background: linear-gradient(135deg, #f97316, #ec4899);
+        }
+
+        .product-share-icon--facebook:hover {
+            background: linear-gradient(135deg, #1877f2, #165ed0);
+        }
+
+        .product-share-icon svg {
+            width: 1.2rem;
+            height: 1.2rem;
+            fill: currentColor;
+        }
+
+        @media (max-width: 640px) {
+            .product-preview-toolbar {
+                gap: 0.45rem;
+            }
+
+            .product-share-toggle {
+                justify-content: center;
+                padding: 0.44rem 0.62rem;
+                font-size: 0.74rem;
+                gap: 0.34rem;
+            }
+
+            .product-share-tooltip {
+                left: 0;
+                right: auto;
+                transform: translateX(0) scale(0.96);
+                width: max-content;
+                min-width: 8.8rem;
+                max-width: min(78vw, 12.2rem);
+                min-width: 0;
+                padding: 0.5rem 0.56rem;
+                border-radius: 0.75rem;
+            }
+
+            .product-share-menu[open] .product-share-tooltip {
+                transform: translateX(0) scale(1);
+            }
+
+            .product-share-tooltip::before {
+                left: 1.2rem;
+                transform: rotate(45deg);
+                width: 0.72rem;
+                height: 0.72rem;
+                top: -0.36rem;
+            }
+
+            .product-share-icons {
+                gap: 0.35rem;
+            }
+
+            .product-share-icon {
+                width: 2rem;
+                height: 2rem;
+            }
+
+            .product-share-icon svg {
+                width: 0.92rem;
+                height: 0.92rem;
+            }
+
+            .product-share-note {
+                margin-top: 0.35rem;
+                font-size: 0.62rem;
+            }
+
+            .product-zoom-controls {
+                gap: 0.25rem;
+                padding: 0.2rem;
+            }
+
+            .product-zoom-controls button[id^="product-zoom-"] {
+                padding-left: 0.45rem;
+                padding-right: 0.45rem;
+            }
+        }
+
+        @media (max-width: 360px) {
+            .product-share-toggle span {
+                display: inline;
+            }
+
+            .product-share-toggle {
+                padding: 0.42rem 0.55rem;
+                min-width: 0;
+            }
+
+            .product-share-toggle .h-4.w-4 {
+                width: 0.9rem;
+                height: 0.9rem;
+            }
+
+            .product-zoom-controls {
+                transform: scale(0.93);
+                transform-origin: right center;
+            }
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            .product-share-toggle {
+                animation: none;
+            }
+        }
+
+        @keyframes product-share-pulse {
+            0% {
+                box-shadow: 0 0 0 0 rgba(5, 150, 105, 0.36);
+            }
+            70% {
+                box-shadow: 0 0 0 14px rgba(5, 150, 105, 0);
+            }
+            100% {
+                box-shadow: 0 0 0 0 rgba(5, 150, 105, 0);
+            }
+        }
+    </style>
+@endpush
+
 @section('content')
+    @php
+        $shareUrl = trim((string) ($canonicalProductUrl ?? route('products.show', $product->id)));
+        $shareTitle = trim($product->code.' '.$product->name);
+        $shareMessage = 'Lihat produk '.$shareTitle.' di katalog PT. Sidoagung Farm: '.$shareUrl;
+        $whatsAppShareUrl = 'https://wa.me/?text='.urlencode($shareMessage);
+        $facebookShareUrl = 'https://www.facebook.com/sharer/sharer.php?u='.urlencode($shareUrl);
+        $shareHost = strtolower((string) parse_url($shareUrl, PHP_URL_HOST));
+        $isLocalShareHost = in_array($shareHost, ['localhost', '127.0.0.1', '::1'], true);
+    @endphp
+
     <section class="catalog-page space-y-5">
         <div class="catalog-panel rounded-3xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
             <div class="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between sm:gap-4">
@@ -23,8 +288,57 @@
             </div>
             <div class="p-4 sm:p-5">
                 <div class="rounded-2xl border border-slate-200 bg-gradient-to-br from-slate-100 via-white to-slate-200 p-4 sm:p-6">
-                    <div class="mb-3 flex flex-wrap items-center justify-end gap-3">
-                        <div class="inline-flex items-center gap-2 rounded-lg bg-white/90 p-1 ring-1 ring-slate-200">
+                    <div class="product-preview-toolbar mb-3">
+                        <details class="product-share-menu" id="product-share-menu">
+                            <summary class="product-share-toggle">
+                                <span>Share</span>
+                                <x-lucide-share-2 class="h-4 w-4" />
+                            </summary>
+                            <div class="product-share-tooltip">
+                                <div class="product-share-icons">
+                                    <a
+                                        href="{{ $whatsAppShareUrl }}"
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        class="product-share-icon product-share-icon--whatsapp"
+                                        aria-label="Share ke WhatsApp"
+                                    >
+                                        <svg viewBox="0 0 24 24" aria-hidden="true">
+                                            <path d="M19.05 4.91A9.82 9.82 0 0 0 12.06 2a9.94 9.94 0 0 0-8.5 15.1L2 22l5.06-1.51A9.93 9.93 0 0 0 12.06 22c5.49 0 9.94-4.45 9.94-9.94 0-2.65-1.04-5.15-2.95-7.15ZM12.06 20.2c-1.53 0-3.03-.4-4.34-1.16l-.31-.18-3 .9.91-2.92-.2-.32a8.13 8.13 0 0 1 6.94-12.71c2.17 0 4.21.84 5.74 2.38a8.05 8.05 0 0 1 2.38 5.73c0 4.49-3.65 8.14-8.12 8.14Zm4.46-6.1c-.25-.12-1.47-.72-1.7-.81-.23-.08-.4-.12-.57.12s-.65.8-.8.96c-.15.17-.3.19-.56.06-.25-.12-1.07-.39-2.03-1.25-.74-.65-1.25-1.47-1.39-1.72-.14-.25-.02-.39.11-.51.11-.12.25-.3.37-.45.12-.14.17-.25.25-.41.08-.17.04-.31-.02-.44-.06-.12-.57-1.37-.78-1.88-.2-.48-.41-.42-.57-.43h-.49c-.16 0-.43.06-.66.31-.23.25-.87.85-.87 2.07 0 1.22.9 2.4 1.02 2.57.12.17 1.76 2.67 4.27 3.74.6.26 1.07.42 1.44.54.61.19 1.17.16 1.62.1.49-.07 1.47-.6 1.68-1.18.21-.58.21-1.08.15-1.18-.06-.09-.23-.15-.48-.27Z" />
+                                        </svg>
+                                    </a>
+                                    <button
+                                        type="button"
+                                        id="product-share-instagram"
+                                        data-share-url="{{ $shareUrl }}"
+                                        data-share-title="{{ $shareTitle }}"
+                                        data-share-text="{{ $shareMessage }}"
+                                        class="product-share-icon product-share-icon--instagram"
+                                        aria-label="Share ke Instagram"
+                                        title="Akan membuka Instagram dan menyalin link produk"
+                                    >
+                                        <svg viewBox="0 0 24 24" aria-hidden="true">
+                                            <path d="M7.5 2C4.47 2 2 4.47 2 7.5v9C2 19.53 4.47 22 7.5 22h9c3.03 0 5.5-2.47 5.5-5.5v-9C22 4.47 19.53 2 16.5 2h-9Zm0 1.8h9c2.04 0 3.7 1.66 3.7 3.7v9c0 2.04-1.66 3.7-3.7 3.7h-9a3.7 3.7 0 0 1-3.7-3.7v-9c0-2.04 1.66-3.7 3.7-3.7Zm9.58 1.33a1.09 1.09 0 1 0 0 2.18 1.09 1.09 0 0 0 0-2.18ZM12 7a5 5 0 0 0-5 5 5 5 0 1 0 5-5Zm0 1.8A3.2 3.2 0 1 1 8.8 12 3.2 3.2 0 0 1 12 8.8Z" />
+                                        </svg>
+                                    </button>
+                                    <a
+                                        href="{{ $facebookShareUrl }}"
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        class="product-share-icon product-share-icon--facebook"
+                                        aria-label="Share ke Facebook"
+                                    >
+                                        <svg viewBox="0 0 24 24" aria-hidden="true">
+                                            <path d="M13.5 21v-8h2.6l.4-3h-3V8.1c0-.87.25-1.46 1.49-1.46h1.59V3.96c-.28-.04-1.24-.12-2.35-.12-2.33 0-3.93 1.42-3.93 4.03V10H7.7v3h2.6v8h3.2Z" />
+                                        </svg>
+                                    </a>
+                                </div>
+                                @if($isLocalShareHost)
+                                    <p class="product-share-note">Preview Facebook/Instagram tidak tampil di localhost.</p>
+                                @endif
+                            </div>
+                        </details>
+                        <div class="product-zoom-controls inline-flex items-center gap-2 rounded-lg bg-white/90 p-1 ring-1 ring-slate-200">
                             <button type="button" id="product-zoom-out" class="rounded-md p-2 text-slate-700 transition hover:bg-slate-100" aria-label="Perbesar">
                                 <x-lucide-zoom-out class="h-4 w-4" />
                             </button>
@@ -236,6 +550,8 @@
             const relatedPrevButton = document.querySelector('.related-products-prev');
             const relatedNextButton = document.querySelector('.related-products-next');
             const relatedPagination = document.querySelector('.related-products-pagination');
+            const shareMenu = document.getElementById('product-share-menu');
+            const instagramShareButton = document.getElementById('product-share-instagram');
 
             if (!image || !stage || !zoomInButton || !zoomOutButton || !resetButton || !lightboxTrigger || !lightbox || !lightboxStage || !lightboxImage || !lightboxCloseButton || !lightboxZoomInButton || !lightboxZoomOutButton || !lightboxZoomResetButton) return;
 
@@ -678,6 +994,51 @@
             lightboxStage.addEventListener('pointerleave', stopLightboxPointer);
 
             window.addEventListener('resize', applyLightboxScale);
+
+            if (shareMenu) {
+                document.addEventListener('click', (event) => {
+                    if (shareMenu.open && !shareMenu.contains(event.target)) {
+                        shareMenu.open = false;
+                    }
+                });
+
+                document.addEventListener('keydown', (event) => {
+                    if (event.key === 'Escape') {
+                        shareMenu.open = false;
+                    }
+                });
+            }
+
+            if (instagramShareButton) {
+                instagramShareButton.addEventListener('click', async () => {
+                    const shareUrl = instagramShareButton.dataset.shareUrl || window.location.href;
+                    const shareText = instagramShareButton.dataset.shareText || '';
+                    const shareTitle = instagramShareButton.dataset.shareTitle || document.title;
+
+                    if (navigator.share) {
+                        try {
+                            await navigator.share({
+                                title: shareTitle,
+                                text: shareText,
+                                url: shareUrl,
+                            });
+                            return;
+                        } catch (error) {
+                            // Fallback below when Web Share is cancelled/unsupported.
+                        }
+                    }
+
+                    if (navigator.clipboard?.writeText) {
+                        try {
+                            await navigator.clipboard.writeText(shareUrl);
+                        } catch (error) {
+                            // Ignore clipboard failure; Instagram fallback still opens.
+                        }
+                    }
+
+                    window.open('https://www.instagram.com/', '_blank', 'noopener,noreferrer');
+                });
+            }
         })();
     </script>
 @endpush
